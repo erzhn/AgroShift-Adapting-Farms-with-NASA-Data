@@ -39,6 +39,14 @@ def _data(row: object, schema: type[schemas.Contract], *exclude: str) -> dict:
     return {name: getattr(row, name) for name in schema.model_fields if name not in exclude}
 
 
+def list_crops(*, session: Session | None = None) -> list[schemas.Crop]:
+    with _session(session) as db:
+        return [
+            get_crop(id_, session=db)
+            for id_ in db.scalars(select(models.Crop.id).order_by(models.Crop.code))
+        ]
+
+
 def get_farm(farm_id: UUID | str, *, session: Session | None = None) -> schemas.Farm:
     with _session(session) as db:
         farm = db.scalar(

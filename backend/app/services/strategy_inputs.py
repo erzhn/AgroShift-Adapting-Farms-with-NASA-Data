@@ -406,6 +406,11 @@ def _crop_from_service(raw: Any, base: CropInfo | None) -> CropInfo:
 
 def _farm_from_service(farm_id: str, raw: Any, get_crop: Any) -> FarmInputs:
     """Farm владельца → FarmInputs. Недостающие деньги/скот берутся из демо с пометкой."""
+    from app.modules.farms import schemas, service
+    from app.modules.farms.strategy_adapter import strategy_inputs
+
+    if isinstance(raw, schemas.Farm):
+        return strategy_inputs(raw, service.list_crops())
     warnings: list[str] = []
     demo = demo_econ()
     crops: dict[str, CropInfo] = {}
@@ -526,6 +531,12 @@ def load_inputs(farm_id: str) -> FarmInputs:
             if raw is not None:
                 inputs = _farm_from_service(farm_id, raw, _find(FARM_MODULES, "get_crop"))
         except Exception as exc:  # noqa: BLE001
+            if farm_id != "demo":
+                from app.core.errors import ProblemError
+
+                if isinstance(exc, ProblemError):
+                    raise
+                raise ProblemError(422, "Unprocessable Entity", str(exc)) from exc
             log.exception("farms.get_farm не подошёл — работаю на демо-хозяйстве")
             inputs = demo_inputs(farm_id, (f"farms.get_farm: {exc!r} — использовано демо",))
     if inputs is None:

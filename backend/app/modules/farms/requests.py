@@ -4,7 +4,8 @@ from datetime import date
 from typing import Annotated, ClassVar, Literal, Self
 from uuid import UUID
 
-from pydantic import Field as Attr, StringConstraints, model_validator
+from pydantic import Field as Attr
+from pydantic import StringConstraints, model_validator
 
 from app.models.enums import IrrigationMethod
 from app.modules.farms.schemas import Contract, Money, NonNegative, Point, Polygon, Positive
@@ -42,7 +43,13 @@ class Patch(Contract):
 
 
 class FarmPatch(Patch):
-    non_nullable = {"name", "language", "consent_agronomist", "consent_canal_plan", "consent_analytics"}
+    non_nullable = {
+        "name",
+        "language",
+        "consent_agronomist",
+        "consent_canal_plan",
+        "consent_analytics",
+    }
     name: Name | None = None
     district: ShortText | None = None
     village: ShortText | None = None
@@ -94,7 +101,10 @@ class FieldCreate(Contract):
 
 class FieldPatch(Patch):
     non_nullable = {"name", "area_ha", "irrigation_method", "season"}
-    name: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)] | None = None
+    name: (
+        Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)]
+        | None
+    ) = None
     area_ha: Annotated[float, Attr(gt=0, le=1000000)] | None = None
     geometry: Polygon | None = None
     location: Point | None = None

@@ -294,7 +294,11 @@ def load_seed() -> SeedBundle:
         farm=farm,
         canal=DemoCanal(conveyance_efficiency=profile["conveyance_efficiency"]),
         scenarios=scenarios,
-        rotations=[Rotation(id=seed_id(f"rotation/{row['code']}"),
-                            **{key: value for key, value in row.items() if key != "code"})
-                   for row in raw.get("rotations", [])],
+        rotations=[
+            Rotation(
+                id=seed_id(f"rotation/{row['code']}"),
+                **{key: value for key, value in row.items() if key != "code"},
+            )
+            for row in raw.get("rotations", [])
+        ],
     )

@@ -4,43 +4,19 @@ Enable explicitly: AGROSHIFT_TEST_DB=1 pytest -m db. No existing tables are clea
 """
 
 import json
-import os
 from uuid import uuid4
 
 import pytest
 from sqlalchemy import func, select, text, update
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
 
 from app import models
 from app.core.errors import NotFoundError
-from app.db.base import Base
 from app.modules.farms.demo import FARM_ID, load_seed, seed_id
 from app.modules.farms.seed import seed_farms
 from app.modules.farms.service import get_crop, get_farm, list_scenario_presets
 
 pytestmark = pytest.mark.db
-
-
-@pytest.fixture
-def db():
-    if os.getenv("AGROSHIFT_TEST_DB") != "1":
-        pytest.skip("Set AGROSHIFT_TEST_DB=1 to run isolated PostGIS integration tests")
-    from app.db.session import engine
-
-    with engine.connect() as conn:
-        transaction = conn.begin()
-        schema = "farms_test_" + uuid4().hex
-        try:
-            conn.execute(text(f'CREATE SCHEMA "{schema}"'))
-            conn.execute(text(f'SET LOCAL search_path TO "{schema}", public'))
-            # Use explicit schema translation so public tables cannot be mistaken for test tables.
-            scoped = conn.execution_options(schema_translate_map={None: schema})
-            Base.metadata.create_all(scoped)
-            with Session(bind=scoped, join_transaction_mode="create_savepoint") as session:
-                yield session
-        finally:
-            transaction.rollback()  # Includes all DDL and rows, even when a test fails.
 
 
 def test_seed_round_trip_and_detached_contracts(db):

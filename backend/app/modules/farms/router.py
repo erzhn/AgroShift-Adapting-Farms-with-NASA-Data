@@ -32,24 +32,35 @@ DB = Annotated[Session, Depends(get_db)]
 Key = Annotated[str | None, Header(alias="Idempotency-Key", min_length=1, max_length=128)]
 
 
-def _write(db: Session, operation: Callable, *, scope: str | None = None,
-           key: str | None = None, payload: schemas.Contract | None = None):
+def _write(
+    db: Session,
+    operation: Callable,
+    *,
+    scope: str | None = None,
+    key: str | None = None,
+    payload: schemas.Contract | None = None,
+):
     """Commit validated responses; replay POSTs atomically using the audit journal."""
     try:
         digest = None
         if key and scope and payload:
             digest = hashlib.sha256(payload.model_dump_json().encode()).hexdigest()
-            lock = int.from_bytes(hashlib.sha256(f"{scope}:{key}".encode()).digest()[:8],
-                                  "big", signed=True)
+            lock = int.from_bytes(
+                hashlib.sha256(f"{scope}:{key}".encode()).digest()[:8], "big", signed=True
+            )
             db.execute(select(func.pg_advisory_xact_lock(lock)))
-            receipt = db.scalar(select(models.AuditLog).where(
-                models.AuditLog.action == "idempotency",
-                models.AuditLog.diff["scope"].astext == scope,
-                models.AuditLog.diff["key"].astext == key,
-            ))
+            receipt = db.scalar(
+                select(models.AuditLog).where(
+                    models.AuditLog.action == "idempotency",
+                    models.AuditLog.diff["scope"].astext == scope,
+                    models.AuditLog.diff["key"].astext == key,
+                )
+            )
             if receipt:
                 if receipt.diff["hash"] != digest:
-                    raise ProblemError(409, "Conflict", "Idempotency-Key уже использован с другим телом")
+                    raise ProblemError(
+                        409, "Conflict", "Idempotency-Key уже использован с другим телом"
+                    )
                 result = receipt.diff["response"]
                 db.commit()
                 return result
@@ -58,42 +69,63 @@ def _write(db: Session, operation: Callable, *, scope: str | None = None,
             result.model_dump(round_trip=True) if isinstance(result, schemas.Contract) else result
         )
         if digest:
-            db.add(models.AuditLog(entity="farms_api", entity_id=str(result.id),
-                                  action="idempotency", diff={
-                                      "scope": scope, "key": key, "hash": digest,
-                                      "response": response,
-                                  }))
+            db.add(
+                models.AuditLog(
+                    entity="farms_api",
+                    entity_id=str(result.id),
+                    action="idempotency",
+                    diff={
+                        "scope": scope,
+                        "key": key,
+                        "hash": digest,
+                        "response": response,
+                    },
+                )
+            )
         db.commit()
         return response
     except IntegrityError as exc:
         db.rollback()
-        raise ProblemError(409, "Conflict", "Запись используется другими данными или конфликтует с ними") from exc
+        raise ProblemError(
+            409, "Conflict", "Запись используется другими данными или конфликтует с ними"
+        ) from exc
     except ValidationError as exc:
         db.rollback()
-        raise ProblemError(422, "Unprocessable Entity", "Некорректные данные поля", errors=[
-            {"loc": error["loc"], "msg": error["msg"], "type": error["type"]}
-            for error in exc.errors()
-        ]) from exc
+        raise ProblemError(
+            422,
+            "Unprocessable Entity",
+            "Некорректные данные поля",
+            errors=[
+                {"loc": error["loc"], "msg": error["msg"], "type": error["type"]}
+                for error in exc.errors()
+            ],
+        ) from exc
     except Exception:
         db.rollback()
         raise
 
 
 @router.get("/farms")
-def list_farms(db: DB, limit: Annotated[int, Query(ge=1, le=100)] = 50,
-               cursor: UUID | None = None):
+def list_farms(db: DB, limit: Annotated[int, Query(ge=1, le=100)] = 50, cursor: UUID | None = None):
     statement = select(models.Farm.id).order_by(models.Farm.id).limit(limit + 1)
     if cursor:
         statement = statement.where(models.Farm.id > cursor)
     ids = list(db.scalars(statement))
-    return {"items": [service.get_farm(id_, session=db) for id_ in ids[:limit]],
-            "next_cursor": str(ids[limit - 1]) if len(ids) > limit else None}
+    return {
+        "items": [service.get_farm(id_, session=db) for id_ in ids[:limit]],
+        "next_cursor": str(ids[limit - 1]) if len(ids) > limit else None,
+    }
 
 
 @router.post("/farms", status_code=201, response_model=schemas.Farm)
 def create_farm(payload: requests.FarmCreate, db: DB, idempotency_key: Key = None):
-    return _write(db, lambda: crud.create_farm(db, payload), scope="farms",
-                  key=idempotency_key, payload=payload)
+    return _write(
+        db,
+        lambda: crud.create_farm(db, payload),
+        scope="farms",
+        key=idempotency_key,
+        payload=payload,
+    )
 
 
 @router.get("/farms/{farm_id}", response_model=schemas.Farm)
@@ -115,11 +147,18 @@ def delete_farm(farm_id: UUID, db: DB):
 @router.get("/farms/{farm_id}/fields")
 def list_fields(farm_id: UUID, db: DB):
     farm = service.get_farm(farm_id, session=db)
-    return {"type": "FeatureCollection", "features": [
-        {"type": "Feature", "id": str(field.id), "geometry": field.geometry or field.location,
-         "properties": field.model_dump(mode="json", exclude={"geometry"})}
-        for field in farm.fields
-    ]}
+    return {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "id": str(field.id),
+                "geometry": field.geometry or field.location,
+                "properties": field.model_dump(mode="json", exclude={"geometry"}),
+            }
+            for field in farm.fields
+        ],
+    }
 
 
 @router.get("/farms/{farm_id}/fields/{field_id}", response_model=schemas.Field)
@@ -130,8 +169,13 @@ def get_field(farm_id: UUID, field_id: UUID, db: DB):
 
 @router.post("/farms/{farm_id}/fields", status_code=201, response_model=schemas.Field)
 def create_field(farm_id: UUID, payload: requests.FieldCreate, db: DB, idempotency_key: Key = None):
-    return _write(db, lambda: crud.create_field(db, farm_id, payload), scope=f"fields/{farm_id}",
-                  key=idempotency_key, payload=payload)
+    return _write(
+        db,
+        lambda: crud.create_field(db, farm_id, payload),
+        scope=f"fields/{farm_id}",
+        key=idempotency_key,
+        payload=payload,
+    )
 
 
 @router.patch("/farms/{farm_id}/fields/{field_id}", response_model=schemas.Field)
@@ -147,9 +191,7 @@ def delete_field(farm_id: UUID, field_id: UUID, db: DB):
 
 @catalog_router.get("/catalog/crops", response_model=list[schemas.Crop])
 def list_crops(db: DB):
-    return [service.get_crop(id_, session=db) for id_ in db.scalars(
-        select(models.Crop.id).order_by(models.Crop.code)
-    )]
+    return service.list_crops(session=db)
 
 
 @catalog_router.get("/catalog/rotations", response_model=list[schemas.Rotation])

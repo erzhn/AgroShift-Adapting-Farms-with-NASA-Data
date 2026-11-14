@@ -30,8 +30,11 @@ def _source(value: object, *, derived: bool = False) -> dict:
 
 
 def audit(db: Session, entity: str, entity_id: UUID, action: str, changes: dict) -> None:
-    db.add(models.AuditLog(entity=entity, entity_id=str(entity_id), action=action,
-                           diff=jsonable_encoder(changes)))
+    db.add(
+        models.AuditLog(
+            entity=entity, entity_id=str(entity_id), action=action, diff=jsonable_encoder(changes)
+        )
+    )
 
 
 def farm_row(db: Session, farm_id: UUID) -> models.Farm:
@@ -43,9 +46,9 @@ def farm_row(db: Session, farm_id: UUID) -> models.Farm:
 
 
 def field_row(db: Session, farm_id: UUID, field_id: UUID) -> models.Field:
-    field = db.scalar(select(models.Field).where(
-        models.Field.id == field_id, models.Field.farm_id == farm_id
-    ))
+    field = db.scalar(
+        select(models.Field).where(models.Field.id == field_id, models.Field.farm_id == farm_id)
+    )
     if field is None:
         raise NotFoundError("Field", field_id)
     return field
@@ -54,17 +57,21 @@ def field_row(db: Session, farm_id: UUID, field_id: UUID) -> models.Field:
 def _assets(db: Session, farm: models.Farm, values: dict) -> None:
     if "cash_som" in values:
         balance = values.pop("cash_som")
-        accounts = list(db.scalars(select(models.CashAccount).where(
-            models.CashAccount.farm_id == farm.id
-        )))
+        accounts = list(
+            db.scalars(select(models.CashAccount).where(models.CashAccount.farm_id == farm.id))
+        )
         if len(accounts) > 1:
-            raise ProblemError(409, "Conflict", "У хозяйства несколько счетов: изменяйте их отдельно")
+            raise ProblemError(
+                409, "Conflict", "У хозяйства несколько счетов: изменяйте их отдельно"
+            )
         if balance is None:
             for account in accounts:
                 db.delete(account)
         else:
-            account = accounts[0] if accounts else models.CashAccount(
-                id=uuid4(), farm_id=farm.id, name="Основной"
+            account = (
+                accounts[0]
+                if accounts
+                else models.CashAccount(id=uuid4(), farm_id=farm.id, name="Основной")
             )
             account.balance_som = balance
             account.as_of = datetime.now(ZoneInfo("Asia/Bishkek")).date()
@@ -72,18 +79,25 @@ def _assets(db: Session, farm: models.Farm, values: dict) -> None:
             db.add(account)
     if "cow_count" in values:
         count = values.pop("cow_count")
-        herds = list(db.scalars(select(models.Herd).where(
-            models.Herd.farm_id == farm.id, models.Herd.species == "cow",
-            models.Herd.purpose == "milk"
-        )))
+        herds = list(
+            db.scalars(
+                select(models.Herd).where(
+                    models.Herd.farm_id == farm.id,
+                    models.Herd.species == "cow",
+                    models.Herd.purpose == "milk",
+                )
+            )
+        )
         if len(herds) > 1:
             raise ProblemError(409, "Conflict", "У хозяйства несколько стад: изменяйте их отдельно")
         if count is None:
             for herd in herds:
                 db.delete(herd)
         else:
-            herd = herds[0] if herds else models.Herd(
-                id=uuid4(), farm_id=farm.id, species="cow", purpose="milk"
+            herd = (
+                herds[0]
+                if herds
+                else models.Herd(id=uuid4(), farm_id=farm.id, species="cow", purpose="milk")
             )
             herd.head_count = count
             herd.provenance = {**(herd.provenance or {}), "head_count": _source(count)}
@@ -96,10 +110,14 @@ def create_farm(db: Session, payload: inputs.FarmCreate) -> schemas.Farm:
     workspace = models.Workspace(id=uuid4(), name=payload.name, type="farm", region_id="chuy")
     db.add(workspace)
     db.flush()
-    farm = models.Farm(id=uuid4(), workspace_id=workspace.id, **values,
-                      provenance={name: _source(values[name]) for name in (
-                          "family_reserve_som", "labour_hours_month"
-                      )})
+    farm = models.Farm(
+        id=uuid4(),
+        workspace_id=workspace.id,
+        **values,
+        provenance={
+            name: _source(values[name]) for name in ("family_reserve_som", "labour_hours_month")
+        },
+    )
     db.add(farm)
     db.flush()
     _assets(db, farm, assets)
@@ -158,9 +176,9 @@ def _validated_field(db: Session, farm_id: UUID, values: dict, field_id: UUID | 
             if not db.scalar(select(func.ST_Covers(shape, _geo(result["location"])))):
                 invalid("Точка поля должна находиться внутри контура")
         else:
-            result["location"] = json.loads(db.scalar(select(
-                func.ST_AsGeoJSON(func.ST_PointOnSurface(shape))
-            )))
+            result["location"] = json.loads(
+                db.scalar(select(func.ST_AsGeoJSON(func.ST_PointOnSurface(shape))))
+            )
         overlap = select(models.Field.id).where(
             models.Field.farm_id == farm_id,
             func.ST_Intersects(models.Field.geometry, shape),
@@ -180,17 +198,29 @@ def _season(db: Session, field: models.Field, data: inputs.SeasonWrite) -> None:
     orchard = db.scalar(select(models.Orchard).where(models.Orchard.field_id == field.id))
     if orchard and db.get(models.Crop, variant.crop_id).code != orchard.species:
         invalid("Поле занято садом: смена культуры требует решения о выкорчёвке")
-    season = db.scalar(select(models.CropSeason).where(
-        models.CropSeason.field_id == field.id, models.CropSeason.year == data.year,
-        models.CropSeason.is_main.is_(True),
-    ))
+    season = db.scalar(
+        select(models.CropSeason).where(
+            models.CropSeason.field_id == field.id,
+            models.CropSeason.year == data.year,
+            models.CropSeason.is_main.is_(True),
+        )
+    )
     if season is None:
         season = models.CropSeason(id=uuid4(), field_id=field.id, is_main=True)
-    values = data.model_dump()
+    values = data.model_dump(exclude_unset=True)
+    # Validate against the saved dates as well; a partial season write is not a replacement.
+    inputs.SeasonWrite.model_validate(
+        {
+            **{key: getattr(season, key, None) for key in inputs.SeasonWrite.model_fields},
+            **values,
+        }
+    )
     for key, value in values.items():
         setattr(season, key, value)
-    season.provenance = {key: _source(value) for key, value in values.items()
-                         if key != "crop_variant_id"}
+    season.provenance = {
+        **(season.provenance or {}),
+        **{key: _source(value) for key, value in values.items() if key != "crop_variant_id"},
+    }
     db.add(season)
 
 
@@ -213,19 +243,23 @@ def _apply_field(field: models.Field, values: dict) -> None:
     for key, value in values.items():
         setattr(field, key, _geo(value) if key in {"geometry", "location"} and value else value)
         if key not in {"canal_id", "name", "irrigation_method"}:
-            field.provenance = {**(field.provenance or {}), key: _source(
-                value, derived=key == "area_ha" and values.get("geometry") is not None
-            )}
+            field.provenance = {
+                **(field.provenance or {}),
+                key: _source(
+                    value, derived=key == "area_ha" and values.get("geometry") is not None
+                ),
+            }
 
 
-def update_field(db: Session, farm_id: UUID, field_id: UUID,
-                 payload: inputs.FieldPatch) -> schemas.Field:
+def update_field(
+    db: Session, farm_id: UUID, field_id: UUID, payload: inputs.FieldPatch
+) -> schemas.Field:
     farm_row(db, farm_id)
     field = field_row(db, farm_id, field_id)
     original = next(f for f in service.get_farm(farm_id, session=db).fields if f.id == field_id)
-    values = original.model_dump(round_trip=True, exclude={
-        "id", "farm_id", "seasons", "provenance"
-    })
+    values = original.model_dump(
+        round_trip=True, exclude={"id", "farm_id", "seasons", "provenance"}
+    )
     updates = payload.model_dump(exclude_unset=True, exclude={"season"})
     values.update(updates)
     if "geometry" in updates and updates["geometry"] is not None:
