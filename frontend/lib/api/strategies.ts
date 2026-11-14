@@ -2,7 +2,7 @@
 // Типы повторяют backend/app/schemas/strategies.py. Деньги — целые сомы, вода — м³,
 // декады — 1–36, месяцы — 1–12.
 
-export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
+export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "/api/v1";
 
 export type StrategyType = "income" | "resilient" | "water_light" | "user";
 
