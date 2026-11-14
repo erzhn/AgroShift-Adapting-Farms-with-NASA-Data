@@ -13,7 +13,7 @@ from sqlalchemy import BigInteger, Boolean, Float, ForeignKey, Integer, String, 
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.db.base import Base, Timestamps, UUIDPk, enum_col
+from app.db.base import Base, ProvenanceMixin, Timestamps, UUIDPk, enum_col
 from app.models.enums import ClimateMode, Completeness, MetricPeriod, RunStatus, StrategyType
 
 
@@ -73,7 +73,7 @@ class ModelVersion(UUIDPk, Timestamps, Base):
     params_hash: Mapped[str | None] = mapped_column(String(64))
 
 
-class Scenario(UUIDPk, Timestamps, Base):
+class Scenario(UUIDPk, Timestamps, ProvenanceMixin, Base):
     """Внешние условия (ползунки UC-3). farm_id = NULL — готовый сценарий для всех (FR-5.2)."""
 
     __tablename__ = "scenarios"
@@ -82,6 +82,8 @@ class Scenario(UUIDPk, Timestamps, Base):
     name: Mapped[str] = mapped_column(String(200))
     preset_code: Mapped[str | None] = mapped_column(String(50), unique=True)
     water_supply_factor: Mapped[float] = mapped_column(Float, default=1.0)  # 0.5..1.2
+    # NULL = весь сезон; [7, 8] = только июль–август (FR-5.2).
+    water_supply_months: Mapped[list[int] | None] = mapped_column(ARRAY(Integer))
     supply_shift_days: Mapped[int] = mapped_column(Integer, default=0)     # -30..30
     temp_delta_c: Mapped[float] = mapped_column(Float, default=0.0)        # 0..3
     precip_factor: Mapped[float] = mapped_column(Float, default=1.0)       # 0.5..1.3

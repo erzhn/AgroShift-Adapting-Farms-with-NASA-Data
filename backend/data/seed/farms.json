@@ -1,0 +1,153 @@
+{
+  "version": 1,
+  "as_of": "2026-11-15",
+  "season": 2027,
+  "sources": {
+    "demo": {
+      "source_type": "user_estimate", "confidence": 0.3,
+      "note": "Оценка для синтетического демо, не измерение и не статистика Кыргызстана.",
+      "citation": "ТЗ AgroShift, разделы 4.2, 14.3; распределение задач Баямана"
+    },
+    "kc": {
+      "source_type": "reference", "confidence": 0.7,
+      "note": "FAO-56, таблица 12: травяной эталон ET0; требуется поправка на местный климат.",
+      "citation": "https://www.fao.org/4/x0490e/x0490e0b.htm"
+    },
+    "roots": {
+      "source_type": "reference", "confidence": 0.6,
+      "note": "FAO-56, таблица 22: выбрано значение внутри диапазона; глубину уточняет агроном.",
+      "citation": "https://www.fao.org/4/x0490e/x0490e0e.htm"
+    },
+    "p": {
+      "source_type": "reference", "confidence": 0.7,
+      "note": "FAO-56, таблица 22: p при ETc около 5 мм/сут, до климатической поправки.",
+      "citation": "https://www.fao.org/4/x0490e/x0490e0e.htm"
+    },
+    "ky": {
+      "source_type": "reference", "confidence": 0.6,
+      "note": "Сезонный Ky из FAO-33, воспроизведён в FAO-56, таблица 24. Не Ky отдельных стадий.",
+      "citation": "https://www.fao.org/4/x0490e/x0490e0e.htm"
+    },
+    "stages_wheat": {
+      "source_type": "reference", "confidence": 0.5,
+      "note": "FAO-56, таблица 11: яровые зерновые, март–апрель, широты 35–45°. Не местная калибровка.",
+      "citation": "https://www.fao.org/4/x0490e/x0490e0b.htm"
+    },
+    "stages_beans": {
+      "source_type": "reference", "confidence": 0.5,
+      "note": "FAO-56, таблица 11: сухая фасоль, континентальный климат, посев май–июнь.",
+      "citation": "https://www.fao.org/4/x0490e/x0490e0b.htm"
+    }
+  },
+  "crops": [
+    {
+      "code": "alfalfa", "name_ky": "Беде", "name_ru": "Люцерна", "name_en": "Alfalfa",
+      "family": "Fabaceae", "is_perennial": true,
+      "kc_ini": 0.4, "kc_mid": 0.95, "kc_end": 0.9,
+      "stage_days": [10, 30, 140, 20], "height_m": 0.7,
+      "root_depth_m": 1.5, "p_depletion": 0.55, "ky": 1.1, "t_base": 5,
+      "note": "Kc усредняет укосы за сезон. Длительности середины и конца сезона — оценка для демо.",
+      "variant": {
+        "code": "alfalfa_hay", "product": "hay", "yield_potential_t_ha": 8,
+        "price_som_t": 18000,
+        "costs": [
+          {"operation": "maintenance", "month": 4, "cost_som_ha": 12000, "labour_h_ha": 12},
+          {"operation": "water_fee", "month": 6, "cost_som_ha": 6000, "labour_h_ha": 10},
+          {"operation": "harvest", "month": 8, "cost_som_ha": 18000, "labour_h_ha": 24}
+        ]
+      }
+    },
+    {
+      "code": "maize", "name_ky": "Жүгөрү", "name_ru": "Кукуруза", "name_en": "Maize",
+      "family": "Poaceae", "is_perennial": false,
+      "kc_ini": 0.3, "kc_mid": 1.2, "kc_end": 0.6,
+      "stage_days": [25, 35, 40, 20], "height_m": 2,
+      "root_depth_m": 1.2, "p_depletion": 0.55, "ky": 1.25, "t_base": 8,
+      "note": "Демо-вариант на силос. Kc_end выбран по зелёной уборке (0.60), длительности — оценка; урожайность и цена относятся к свежей массе силоса, не зерну.",
+      "variant": {
+        "code": "maize_silage", "product": "silage", "yield_potential_t_ha": 35,
+        "price_som_t": 4000,
+        "costs": [
+          {"operation": "seeds", "month": 4, "cost_som_ha": 18000, "labour_h_ha": 10},
+          {"operation": "fertilizer", "month": 5, "cost_som_ha": 25000, "labour_h_ha": 12},
+          {"operation": "water_fee", "month": 7, "cost_som_ha": 9000, "labour_h_ha": 16},
+          {"operation": "harvest", "month": 8, "cost_som_ha": 20000, "labour_h_ha": 20}
+        ]
+      }
+    },
+    {
+      "code": "wheat", "name_ky": "Буудай", "name_ru": "Пшеница яровая", "name_en": "Spring wheat",
+      "family": "Poaceae", "is_perennial": false,
+      "kc_ini": 0.3, "kc_mid": 1.15, "kc_end": 0.25,
+      "stage_days": [20, 25, 60, 30], "height_m": 1,
+      "root_depth_m": 1.2, "p_depletion": 0.55, "ky": 1.15, "t_base": 0,
+      "note": "Яровая пшеница, уборка сухого зерна; Kc_end — нижний конец диапазона таблицы 12.",
+      "variant": {
+        "code": "wheat_spring", "product": "grain", "yield_potential_t_ha": 4,
+        "price_som_t": 24000,
+        "costs": [
+          {"operation": "seeds", "month": 3, "cost_som_ha": 12000, "labour_h_ha": 8},
+          {"operation": "fertilizer", "month": 4, "cost_som_ha": 15000, "labour_h_ha": 8},
+          {"operation": "water_fee", "month": 6, "cost_som_ha": 6000, "labour_h_ha": 10},
+          {"operation": "harvest", "month": 7, "cost_som_ha": 14000, "labour_h_ha": 12}
+        ]
+      }
+    },
+    {
+      "code": "beans", "name_ky": "Төө буурчак", "name_ru": "Фасоль", "name_en": "Dry beans",
+      "family": "Fabaceae", "is_perennial": false,
+      "kc_ini": 0.4, "kc_mid": 1.15, "kc_end": 0.35,
+      "stage_days": [20, 30, 40, 20], "height_m": 0.4,
+      "root_depth_m": 0.7, "p_depletion": 0.45, "ky": 1.15, "t_base": 10,
+      "note": "Сухая фасоль; пороги температуры и местная урожайность требуют калибровки.",
+      "variant": {
+        "code": "beans_dry", "product": "grain", "yield_potential_t_ha": 2.5,
+        "price_som_t": 80000,
+        "costs": [
+          {"operation": "seeds", "month": 5, "cost_som_ha": 30000, "labour_h_ha": 15},
+          {"operation": "fertilizer", "month": 6, "cost_som_ha": 18000, "labour_h_ha": 15},
+          {"operation": "water_fee", "month": 7, "cost_som_ha": 7000, "labour_h_ha": 12},
+          {"operation": "harvest", "month": 9, "cost_som_ha": 25000, "labour_h_ha": 35}
+        ]
+      }
+    },
+    {
+      "code": "apple", "name_ky": "Алма", "name_ru": "Яблоня", "name_en": "Apple",
+      "family": "Rosaceae", "is_perennial": true,
+      "kc_ini": 0.45, "kc_mid": 0.95, "kc_end": 0.7,
+      "stage_days": [20, 70, 90, 30], "height_m": 4,
+      "root_depth_m": 1.5, "p_depletion": 0.5, "ky": 1, "t_base": 4,
+      "note": "Сад без травяного покрова, с зимними заморозками. Ky=1 — оценка: яблони нет в таблице 24; стадии — оценка.",
+      "variant": {
+        "code": "apple_mature", "product": "fruit", "yield_potential_t_ha": 12,
+        "price_som_t": 30000,
+        "costs": [
+          {"operation": "pruning", "month": 3, "cost_som_ha": 20000, "labour_h_ha": 30},
+          {"operation": "maintenance", "month": 5, "cost_som_ha": 30000, "labour_h_ha": 25},
+          {"operation": "water_fee", "month": 7, "cost_som_ha": 10000, "labour_h_ha": 20},
+          {"operation": "harvest", "month": 9, "cost_som_ha": 35000, "labour_h_ha": 50}
+        ]
+      }
+    }
+  ],
+  "farm": {
+    "name": "Асан", "district": "Сокулукский район", "village": "Сокулук", "language": "ky",
+    "family_reserve_som": 10000, "cash_som": 150000,
+    "labour_hours_month": [80, 80, 160, 240, 240, 260, 260, 260, 240, 180, 100, 80],
+    "fields": [
+      {"code": "orchard", "name": "Старый сад", "crop": "apple", "area_ha": 2, "lon": 74.299, "lat": 42.86, "sowing_date": "2027-03-20", "harvest_date": "2027-10-15"},
+      {"code": "alfalfa", "name": "Люцерна", "crop": "alfalfa", "area_ha": 2, "lon": 74.302, "lat": 42.86, "sowing_date": "2027-04-01", "harvest_date": "2027-10-17"},
+      {"code": "maize", "name": "Нижнее", "crop": "maize", "area_ha": 2, "lon": 74.305, "lat": 42.86, "sowing_date": "2027-04-25", "harvest_date": "2027-08-22"}
+    ],
+    "herd_head_count": 8, "orchard_planted_year": 2007, "orchard_density_trees_ha": 400,
+    "turn_interval_days": 8, "turn_hours": 8, "flow_l_s": 60, "limit_m3": 40000,
+    "failure_months": [8], "conveyance_efficiency": 0.5
+  },
+  "scenarios": [
+    {"preset_code": "like_2023", "name": "Как 2023 год", "climate_mode": "historical_year", "climate_params": {"year": 2023}},
+    {"preset_code": "low_snow", "name": "Малоснежная зима", "climate_mode": "percentile", "climate_params": {"percentile": 50}, "water_supply_factor": 0.7, "supply_shift_days": 10},
+    {"preset_code": "water_minus_20", "name": "Вода −20% в июле–августе", "climate_mode": "percentile", "climate_params": {"percentile": 50}, "water_supply_factor": 0.8, "water_supply_months": [7, 8]},
+    {"preset_code": "feed_plus_40", "name": "Корм +40%", "climate_mode": "percentile", "climate_params": {"percentile": 50}, "price_factors": {"feed": 1.4}},
+    {"preset_code": "payment_plus_60", "name": "Оплата +60 дней", "climate_mode": "percentile", "climate_params": {"percentile": 50}, "payment_delay_days": 60}
+  ]
+}
