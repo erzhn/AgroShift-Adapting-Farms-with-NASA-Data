@@ -12,10 +12,6 @@ def data_1() -> None:
     raise NotImplementedYetError("Откуда это число", "FR-11.1")
 
 
-@router.get("/data-sources", summary="Данные NASA и атрибуция")
-def data_2() -> None:
-    raise NotImplementedYetError("Данные NASA и атрибуция", "FR-11.2")
-
 
 @router.post("/admin/snapshots:refresh", summary="Обновить снимки данных")
 def data_3() -> None:
