@@ -4,7 +4,7 @@ DTO отделены от SQLAlchemy: их можно передавать в я
 Деньги — целые сомы, урожай — т/га, цена продукции — сом/т, геометрия — WGS84.
 """
 
-from datetime import date
+from datetime import date, datetime
 from typing import Annotated, Literal, Self
 from uuid import UUID
 
@@ -18,11 +18,12 @@ from app.models.enums import (
     IrrigationMethod,
     MaturityClass,
     Rootstock,
+    RotationStatus,
     SourceType,
     Species,
 )
 
-Money = Annotated[int, Attr(strict=True, ge=0)]
+Money = Annotated[int, Attr(strict=True, ge=0, le=9007199254740991)]
 Positive = Annotated[float, Attr(gt=0)]
 NonNegative = Annotated[float, Attr(ge=0)]
 Month = Annotated[int, Attr(strict=True, ge=1, le=12)]
@@ -310,6 +311,17 @@ class Farm(Sourced):
 class ClimateParameters(Contract):
     year: Annotated[int, Attr(strict=True, ge=1900, le=2200)] | None = None
     percentile: Annotated[int, Attr(strict=True, ge=0, le=100)] | None = None
+
+
+class Rotation(Contract):
+    id: UUID
+    zone_id: str
+    name: str
+    sequence: list[str]
+    min_gap_rules: dict[str, int] = Attr(default_factory=dict)
+    approved_by: str | None = None
+    approved_at: datetime | None = None
+    status: RotationStatus = RotationStatus.EXPERIMENTAL
 
 
 class Scenario(Sourced):

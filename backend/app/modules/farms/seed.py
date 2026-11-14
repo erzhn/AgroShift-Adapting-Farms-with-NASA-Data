@@ -87,4 +87,6 @@ def seed_farms(session: Session, bundle: SeedBundle | None = None) -> dict[str, 
                 add(model, _values(item))
         for scenario in bundle.scenarios:
             add(models.Scenario, _values(scenario))
+        for rotation in bundle.rotations:
+            add(models.RotationTemplate, _values(rotation))
     return dict(inserted)
