@@ -72,6 +72,15 @@ def install_error_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(RequestValidationError)
     async def _validation_handler(_: Request, exc: RequestValidationError) -> JSONResponse:
+        # Pydantic v2 includes the originating ValueError under ``ctx.error``.
+        # That object is not JSON serializable; expose stable, client-safe fields.
+        errors = [
+            {
+                "loc": error.get("loc", ()),
+                "msg": error.get("msg", "Invalid value"),
+                "type": error.get("type", "value_error"),
+            }
+            for error in exc.errors()
+        ]
         return _problem(422, "Unprocessable Entity", "Ошибка валидации входных данных",
-                        errors=[{"loc": error["loc"], "msg": error["msg"], "type": error["type"]}
-                                for error in exc.errors()])
+                        errors=errors)

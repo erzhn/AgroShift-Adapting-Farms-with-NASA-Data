@@ -260,6 +260,10 @@ export default function Dashboard({
             <Icon name="edit" />
             {t("settings")}
           </button>
+          <a className="nav-item" href="/canal">
+            <Icon name="drop" />
+            Кабинет АВП
+          </a>
         </nav>
         <div className="sidebar-season">
           <Icon name="leaf" size={26} />

@@ -6,7 +6,7 @@
 
 import "maplibre-gl/dist/maplibre-gl.css";
 
-import maplibregl from "maplibre-gl";
+import { LngLatBounds, Map as MapLibreMap, Marker, NavigationControl } from "maplibre-gl";
 import { useEffect, useRef, useState } from "react";
 
 import type { SnapshotInfo } from "../../lib/api/water";
@@ -25,13 +25,13 @@ export default function GridCellMap({ snapshots, lang }: Props) {
 
   useEffect(() => {
     if (!ref.current || !snapshots.length) return;
-    const bounds = new maplibregl.LngLatBounds();
+    const bounds = new LngLatBounds();
     for (const s of snapshots) {
       bounds.extend([s.cell.bbox[0], s.cell.bbox[1]]);
       bounds.extend([s.cell.bbox[2], s.cell.bbox[3]]);
     }
 
-    const map = new maplibregl.Map({
+    const map = new MapLibreMap({
       container: ref.current,
       style: {
         version: 8,
@@ -57,7 +57,7 @@ export default function GridCellMap({ snapshots, lang }: Props) {
         "CooperativeGesturesHandler.MobileHelpText": t.mapHelpMobile,
       },
     });
-    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+    map.addControl(new NavigationControl({ showCompass: false }), "top-right");
     map.on("error", () => setNoBasemap(true));
 
     map.on("load", () => {
@@ -84,23 +84,23 @@ export default function GridCellMap({ snapshots, lang }: Props) {
                      paint: { "line-color": "#1c5cab", "line-width": 2 } });
     });
 
-    const markers: maplibregl.Marker[] = [];
+    const markers: Marker[] = [];
     for (const s of snapshots) {
       const point = document.createElement("div");
       point.className = css.mapPoint;
-      markers.push(new maplibregl.Marker({ element: point }).setLngLat([s.lon, s.lat])
+      markers.push(new Marker({ element: point }).setLngLat([s.lon, s.lat])
         .addTo(map));
 
       const label = document.createElement("div");
       label.className = css.mapLabel;
       label.textContent = s.point_name ?? s.code;
-      markers.push(new maplibregl.Marker({ element: label, anchor: "bottom", offset: [0, -10] })
+      markers.push(new Marker({ element: label, anchor: "bottom", offset: [0, -10] })
         .setLngLat([s.lon, s.lat]).addTo(map));
 
       const cellLabel = document.createElement("div");
       cellLabel.className = css.mapLabel;
       cellLabel.textContent = `0,5° × 0,625° · ${Math.round(s.cell.cell_elevation_m)} ${t.m}`;
-      markers.push(new maplibregl.Marker({ element: cellLabel, anchor: "top-left",
+      markers.push(new Marker({ element: cellLabel, anchor: "top-left",
                                            offset: [6, 6] })
         .setLngLat([s.cell.bbox[0], s.cell.bbox[3]]).addTo(map));
     }
