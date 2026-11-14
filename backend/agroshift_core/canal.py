@@ -157,8 +157,10 @@ def coordinate_canal(
 
     base_demands = [farm.demand_m3_by_decade for farm in farms]
     demand_before = _aggregate(farms)
-    deficit_before = tuple(max(0.0, demand - supply)
-                           for demand, supply in zip(demand_before, supply_m3_by_decade, strict=True))
+    deficit_before = tuple(
+        max(0.0, demand - supply)
+        for demand, supply in zip(demand_before, supply_m3_by_decade, strict=True)
+    )
     baseline_allocations = _allocate_pro_rata(
         base_demands, [farm.water_right_m3 for farm in farms], supply_m3_by_decade
     )
@@ -217,8 +219,10 @@ def coordinate_canal(
         current_total_deficit = next_deficit
 
     demand_after = tuple(sum(row[t] for row in current_demands) for t in range(decade_count))
-    deficit_after = tuple(max(0.0, demand - supply)
-                          for demand, supply in zip(demand_after, supply_m3_by_decade, strict=True))
+    deficit_after = tuple(
+        max(0.0, demand - supply)
+        for demand, supply in zip(demand_after, supply_m3_by_decade, strict=True)
+    )
     coordinated_allocations = _allocate_pro_rata(
         current_demands, [farm.water_right_m3 for farm in farms], supply_m3_by_decade
     )
