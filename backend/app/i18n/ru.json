@@ -1,0 +1,18 @@
+{
+  "alert.water_deficit": "Дефицит воды",
+  "alert.cash_gap": "Кассовый разрыв",
+  "alert.feed_shortage": "Нехватка корма",
+  "alert.frost_in_bloom": "Заморозок в цветение",
+  "breakpoint.water_supply": "Если воды в {period} будет на {pct}% меньше — {consequence}",
+  "breakpoint.history": "такое было в {n} из {total} лет",
+  "status.model_estimate": "модельная оценка",
+  "status.experimental": "экспериментально",
+  "status.incomplete": "расчёт неполный",
+  "status.depends_on_conditions": "лучший вариант зависит от условий",
+  "climate.resolution_note": "климат района ~55 × 50 км",
+  "strategy.income": "Больше дохода",
+  "strategy.resilient": "Пережить плохой год",
+  "strategy.water_light": "Меньше зависимости от воды",
+  "strategy.gradual": "Развиваться постепенно",
+  "strategy.user": "Мой вариант"
+}

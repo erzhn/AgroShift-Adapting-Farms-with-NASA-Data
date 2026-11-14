@@ -1,0 +1,61 @@
+# AgroShift — локальная сборка для хакатона и пилота (раздел 11.1 ТЗ).
+# Запуск:  docker compose up --build
+# Swagger: http://localhost:8000/docs
+
+name: agroshift
+
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-agroshift}
+      POSTGRES_USER: ${POSTGRES_USER:-agroshift}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-agroshift}
+      TZ: Asia/Bishkek
+    ports:
+      # 5433 на хосте, чтобы не конфликтовать с локально установленным Postgres
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build: ./backend
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-agroshift}:${POSTGRES_PASSWORD:-agroshift}@db:5432/${POSTGRES_DB:-agroshift}
+      # на Windows/macOS события файловой системы не доходят в контейнер — включаем опрос для --reload
+      WATCHFILES_FORCE_POLLING: "true"
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      # код монтируется в контейнер: правки подхватываются без пересборки
+      - ./backend:/app
+    command: >
+      sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+
+  # Веб-интерфейс к БД: docker compose --profile tools up adminer  →  http://localhost:8080
+  adminer:
+    image: adminer:4
+    profiles: ["tools"]
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+
+  # После хакатона (раздел 11.1): redis + rq-воркер для оптимизации и Монте-Карло,
+  # minio для снимков и результатов прогонов. Пока не подключены — см. docs/architecture.md.
+
+volumes:
+  pgdata:

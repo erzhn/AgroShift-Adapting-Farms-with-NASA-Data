@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+*.egg-info/
+
+# Секреты
+.env
+.env.*
+!.env.example
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Данные: снимки NASA POWER храним в репозитории (нужны для офлайн-демо),
+# а полные результаты прогонов (Parquet выборок) — нет
+backend/data/runs/
+*.tmp
+
+# Frontend
+node_modules/
+.next/

@@ -1,0 +1,18 @@
+{
+  "alert.water_deficit": "Water deficit",
+  "alert.cash_gap": "Cash gap",
+  "alert.feed_shortage": "Feed shortage",
+  "alert.frost_in_bloom": "Frost during bloom",
+  "breakpoint.water_supply": "If water in {period} drops by {pct}% — {consequence}",
+  "breakpoint.history": "this happened in {n} of {total} years",
+  "status.model_estimate": "model estimate",
+  "status.experimental": "experimental",
+  "status.incomplete": "incomplete calculation",
+  "status.depends_on_conditions": "the best option depends on conditions",
+  "climate.resolution_note": "district climate ~55 × 50 km",
+  "strategy.income": "More income",
+  "strategy.resilient": "Survive a bad year",
+  "strategy.water_light": "Less water dependence",
+  "strategy.gradual": "Grow step by step",
+  "strategy.user": "My plan"
+}
