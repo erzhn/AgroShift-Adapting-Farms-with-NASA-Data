@@ -7,6 +7,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app.modules.farms.demo import load_seed
 from app.modules.farms.seed import seed_farms
+from scripts.canal_seed import seed_canal_demo
 
 
 def main() -> None:
@@ -32,6 +33,8 @@ def main() -> None:
         try:
             with SessionLocal.begin() as session:
                 summary["inserted"] = seed_farms(session, bundle)
+                canal = seed_canal_demo(session)
+                summary["canal_id"] = str(canal.id)
         except IntegrityError as exc:
             raise SystemExit(
                 "Seed cancelled: a code or relation conflicts with existing data. "
