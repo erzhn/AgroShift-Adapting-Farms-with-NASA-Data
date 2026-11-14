@@ -11,6 +11,7 @@ from app.models.enums import IrrigationMethod, MaturityClass, SourceType, Worksp
 from app.models.farm import CropSeason, Farm, Field
 from app.models.identity import Workspace
 from app.models.water import Canal, SupplySchedule, WaterRight
+
 SEASON = 2027
 DEMO_INVITE_CODE = "AGROSHIFT-DEMO"
 
