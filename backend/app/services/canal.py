@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import secrets
 from dataclasses import replace
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from uuid import UUID
 
 from geoalchemy2.elements import WKTElement
@@ -14,12 +14,12 @@ from sqlalchemy.orm import Session
 
 from agroshift_core.canal import CanalInputError, FarmDemand, ShiftOption, coordinate_canal
 from app.core.errors import NotFoundError, ProblemError
-from app.modules.water import service as water_service
-from app.modules.water.inputs import CropInput
 from app.models.catalog import CostNorm, Crop, CropVariant, PriceItem
 from app.models.enums import CanalPlanStatus, ProposalResponse
 from app.models.farm import CropSeason, Farm, Field
 from app.models.water import Canal, CanalPlan, CanalProposal, SupplySchedule, WaterRight
+from app.modules.water import service as water_service
+from app.modules.water.inputs import CropInput
 from app.schemas.canal import (
     CanalCreate,
     CanalFarmMapItem,
@@ -250,14 +250,17 @@ def _simulate_canal_farms(
     }
     if set(rights) != farm_ids:
         missing = sorted(str(item) for item in farm_ids - set(rights))
-        raise ProblemError(422, "Missing water rights", "No seasonal water right for: " + ", ".join(missing))
+        raise ProblemError(
+            422,
+            "Missing water rights",
+            "No seasonal water right for: " + ", ".join(missing),
+        )
 
     irrigated_area: dict[UUID, float] = {}
     for field, farm, *_ in rows:
         if getattr(field.irrigation_method, "value", field.irrigation_method) != "none":
             irrigated_area[farm.id] = irrigated_area.get(farm.id, 0.0) + field.area_ha
 
-    crop_ids = {crop.id for _, _, _, crop, _ in rows}
     variants = {variant.id: variant for _, _, _, _, variant in rows}
     prices = db.scalars(
         select(PriceItem)
@@ -299,7 +302,11 @@ def _simulate_canal_farms(
             )
             sowing = base_date + timedelta(days=shift_days)
             if sowing.year != season:
-                raise ProblemError(422, "Invalid sowing shift", "Shift moves sowing outside the crop season")
+                raise ProblemError(
+                    422,
+                    "Invalid sowing shift",
+                    "Shift moves sowing outside the crop season",
+                )
             representative_sowing = representative_sowing or base_date
             water = {
                 "turn_interval_days": right.turn_interval_days,
@@ -706,8 +713,12 @@ def get_latest_demand(db: Session, canal_id: UUID, season: int) -> dict:
                 for index in range(36)
             ],
             "farm_count": len(simulations),
-            "peak_deficit_before_m3": max((item["deficit_before_m3"] for item in decades), default=0),
-            "peak_deficit_after_m3": max((item["deficit_after_m3"] for item in decades), default=0),
+            "peak_deficit_before_m3": max(
+                (item["deficit_before_m3"] for item in decades), default=0
+            ),
+            "peak_deficit_after_m3": max(
+                (item["deficit_after_m3"] for item in decades), default=0
+            ),
             "water_model_version": model_version,
             "snapshot_ids": snapshots,
             "source": "water_simulation",
@@ -730,7 +741,7 @@ def respond_to_proposal(db: Session, proposal_id: UUID, response: ProposalRespon
         raise ProblemError(409, "Proposal already answered", "A response was already recorded")
     proposal.response = response
     proposal.counter_note = counter_note.strip() if counter_note else None
-    proposal.responded_at = datetime.now(timezone.utc)
+    proposal.responded_at = datetime.now(UTC)
     plan = db.get(CanalPlan, proposal.canal_plan_id)
     responses = [item.response for item in plan.proposals]
     if response == ProposalResponse.REJECT or ProposalResponse.REJECT in responses:

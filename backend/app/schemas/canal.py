@@ -92,7 +92,7 @@ class SupplyScheduleInput(BaseModel):
     decades: Annotated[list[SupplyPoint], Field(min_length=1, max_length=36)]
 
     @model_validator(mode="after")
-    def unique_decades(self) -> "SupplyScheduleInput":
+    def unique_decades(self) -> SupplyScheduleInput:
         decades = [point.decade for point in self.decades]
         if len(decades) != len(set(decades)):
             raise ValueError("each decade may be provided only once")
@@ -133,7 +133,7 @@ class ShiftSimulation(BaseModel):
         return values
 
     @model_validator(mode="after")
-    def crop_series_match_total(self) -> "ShiftSimulation":
+    def crop_series_match_total(self) -> ShiftSimulation:
         _validate_crop_totals(self.demand_m3_by_decade, self.crop_demand_m3_by_decade)
         return self
 
@@ -159,7 +159,7 @@ class FarmDemandSimulation(BaseModel):
         return values
 
     @model_validator(mode="after")
-    def unique_shifts(self) -> "FarmDemandSimulation":
+    def unique_shifts(self) -> FarmDemandSimulation:
         shifts = [option.shift_days for option in self.shift_options]
         if len(shifts) != len(set(shifts)):
             raise ValueError("each sowing-date alternative may be provided only once")
@@ -193,7 +193,7 @@ class CoordinatePlanInput(BaseModel):
     snapshot_ids: Annotated[list[str], Field(max_length=16)] = Field(default_factory=list)
 
     @model_validator(mode="after")
-    def unique_farms(self) -> "CoordinatePlanInput":
+    def unique_farms(self) -> CoordinatePlanInput:
         ids = [simulation.farm_id for simulation in self.simulations or []]
         if len(ids) != len(set(ids)):
             raise ValueError("each farm may appear only once")
@@ -205,7 +205,7 @@ class ProposalResponseInput(BaseModel):
     counter_note: Annotated[str | None, Field(max_length=2000)] = None
 
     @model_validator(mode="after")
-    def counter_requires_note(self) -> "ProposalResponseInput":
+    def counter_requires_note(self) -> ProposalResponseInput:
         if self.response == ProposalResponse.PENDING:
             raise ValueError("response must be agree, reject, or counter")
         if self.response == ProposalResponse.COUNTER and not (self.counter_note or "").strip():
