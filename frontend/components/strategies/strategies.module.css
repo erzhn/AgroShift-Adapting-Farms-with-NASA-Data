@@ -1,0 +1,246 @@
+/* Экран «Варианты будущего» и лента денег. Всё в CSS-модуле: не зависит от стилей оболочки. */
+
+.root {
+  --ink: #1c2b24;
+  --muted: #5b6a62;
+  --line: #dde4df;
+  --paper: #ffffff;
+  --wash: #f4f7f5;
+  --green: #1f6f4a;
+  --green-wash: #e7f2ec;
+  --red: #c0392b;
+  --red-wash: #fbeceA;
+  --amber: #8a5a00;
+  --amber-wash: #fdf3dc;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.page {
+  composes: root;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 24px 20px 64px;
+  display: grid;
+  gap: 28px;
+}
+
+.header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px 24px;
+  align-items: start;
+}
+.header h1 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+.lead {
+  margin: 6px 0 0;
+  color: var(--muted);
+  max-width: 62ch;
+}
+.actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.primary {
+  font: inherit;
+  font-weight: 600;
+  color: #fff;
+  background: var(--green);
+  border: 0;
+  border-radius: 8px;
+  padding: 11px 18px;
+  cursor: pointer;
+}
+.primary:hover { background: #185a3b; }
+.primary:disabled { opacity: 0.6; cursor: progress; }
+.primary:focus-visible, .card:focus-visible, .cardSelected:focus-visible, .preset:focus-visible,
+.presetOn:focus-visible, .reset:focus-visible, .langButton:focus-visible, .colButton:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+.langButton {
+  font: inherit;
+  font-size: 13px;
+  color: var(--muted);
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.stages {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  color: var(--muted);
+}
+.stages li { padding: 4px 10px; border-radius: 99px; background: var(--wash); }
+.stages li[data-done="true"] { background: var(--green-wash); color: var(--green); }
+
+.note {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--amber-wash);
+  color: var(--amber);
+  font-size: 14px;
+}
+.meta { grid-column: 1 / -1; margin: 0; font-size: 13px; color: var(--muted); }
+
+.section { display: grid; gap: 12px; }
+.section h2 { margin: 0; font-size: 20px; }
+.section > p { margin: 0; }
+.muted, .hint { color: var(--muted); font-size: 13px; margin: 0; }
+.error { color: var(--red); margin: 0; }
+.empty {
+  padding: 40px 20px;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* --- карточки стратегий --- */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 12px;
+}
+.card, .cardSelected {
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+}
+.card:hover { border-color: #b9c6be; }
+.cardSelected { border-color: var(--green); box-shadow: inset 0 0 0 1px var(--green); }
+.cardType { font-size: 13px; font-weight: 600; color: var(--green); }
+.cardSummary { font-size: 15px; line-height: 1.35; min-height: 4.05em; overflow-wrap: anywhere; }
+.cardLabel { font-size: 12px; color: var(--muted); margin-top: 6px; }
+.cardValue { font-size: 26px; font-weight: 650; line-height: 1.1; }
+.cardRange { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+.range { position: relative; width: 100%; height: 8px; margin: 6px 0 2px; background: var(--wash); border-radius: 4px; }
+.rangeBand { position: absolute; top: 0; bottom: 0; background: #a9cdb9; border-radius: 4px; }
+.rangeDot { position: absolute; top: -3px; width: 4px; height: 14px; margin-left: -2px; background: var(--green); border-radius: 2px; }
+
+.chip, .chipOk, .chipBad, .chipWarn {
+  font-size: 12px;
+  line-height: 1.3;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--wash);
+  color: var(--muted);
+}
+.chipOk { background: var(--green-wash); color: var(--green); }
+.chipBad { background: var(--red-wash); color: var(--red); font-weight: 600; }
+.chipWarn { background: var(--amber-wash); color: var(--amber); }
+
+/* --- таблица сравнения --- */
+.tableWrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); }
+.table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.table th, .table td { padding: 9px 12px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+.table tbody tr:last-child th, .table tbody tr:last-child td { border-bottom: 0; }
+.table tbody th { font-weight: 400; color: var(--muted); min-width: 190px; }
+.table thead th { font-size: 13px; white-space: nowrap; }
+.colSelected { background: var(--green-wash); }
+.colButton { font: inherit; font-weight: 600; color: var(--ink); background: none; border: 0; padding: 0; cursor: pointer; text-align: left; }
+
+/* --- деньги --- */
+.panel { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+.verdictOk, .verdictBad { margin: 0 0 4px; font-size: 16px; font-weight: 600; }
+.verdictOk { color: var(--green); }
+.verdictBad { color: var(--red); }
+
+/* --- стресс-тест --- */
+.stress { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 16px; align-items: start; }
+.controls { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 10px; }
+.controlsTitle { margin: 0; font-size: 12px; color: var(--muted); }
+.presets { display: flex; flex-wrap: wrap; gap: 6px; }
+.preset, .presetOn, .reset {
+  font: inherit;
+  font-size: 13px;
+  padding: 6px 10px;
+  border-radius: 99px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+  cursor: pointer;
+}
+.presetOn { background: var(--ink); border-color: var(--ink); color: #fff; }
+.reset { justify-self: start; border-radius: 8px; color: var(--muted); }
+.slider { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; font-size: 14px; }
+.slider input { grid-column: 1 / -1; width: 100%; accent-color: var(--green); margin: 0; }
+.sliderBase { color: var(--muted); }
+.sliderMoved { color: var(--ink); font-weight: 650; }
+
+.results { display: grid; gap: 14px; min-width: 0; }
+.results[aria-busy="true"] { opacity: 0.75; }
+.answers { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; }
+.answers li { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: grid; gap: 2px; align-content: start; }
+.answers span { font-size: 12px; color: var(--muted); }
+.answers strong { font-size: 15px; line-height: 1.3; overflow-wrap: anywhere; }
+.answers .answerBad { border-color: var(--red); background: var(--red-wash); }
+.answers .answerBad strong { color: var(--red); }
+.answers .answerGood { border-color: var(--green); background: var(--green-wash); }
+
+.columns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.outcomeOk, .outcomeBad, .outcomeEmpty { border-radius: 12px; padding: 14px; border: 1px solid var(--line); background: var(--paper); min-width: 0; }
+.outcomeOk { border-top: 4px solid var(--green); }
+.outcomeBad { border-top: 4px solid var(--red); }
+.outcomeEmpty { color: var(--muted); }
+.columns h4 { margin: 0 0 4px; font-size: 14px; }
+.columns p { margin: 0; }
+.outcomeVerdict { font-size: 16px; font-weight: 600; }
+.outcomeOk .outcomeVerdict { color: var(--green); }
+.outcomeBad .outcomeVerdict { color: var(--red); }
+.columns dl { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; margin: 10px 0; font-size: 14px; }
+.columns dt { color: var(--muted); }
+.columns dd { margin: 0; text-align: right; }
+.decisions { margin: 0; padding: 0; list-style: none; font-size: 13px; color: var(--muted); }
+.decisions .changed { color: var(--ink); font-weight: 600; }
+
+.adaptation { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; }
+.adaptation dt { font-size: 12px; color: var(--muted); grid-row: 1; }
+.adaptation dd { margin: 0; font-size: 20px; font-weight: 650; grid-row: 2; }
+
+/* --- точки поломки --- */
+.breakpoints { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); }
+.breakpoints li { display: grid; grid-template-columns: 92px minmax(0, 1fr) auto 96px; gap: 12px; align-items: baseline; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.breakpoints li:last-child { border-bottom: 0; }
+.bpDelta { font-size: 20px; font-weight: 650; }
+.bpFactor small { display: block; font-size: 13px; color: var(--muted); }
+.bpFreq { font-size: 13px; color: var(--amber); }
+.bpMargin { font-size: 13px; color: var(--muted); text-align: right; }
+
+@media (max-width: 860px) {
+  .header { grid-template-columns: 1fr; }
+  .stress { grid-template-columns: 1fr; }
+  .columns { grid-template-columns: 1fr; }
+  .breakpoints li { grid-template-columns: 76px minmax(0, 1fr); }
+  .bpFreq, .bpMargin { grid-column: 2; text-align: left; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .card, .cardSelected, .primary { transition: border-color 0.15s, background 0.15s; }
+}
