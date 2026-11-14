@@ -60,6 +60,7 @@ class WaterRight(UUIDPk, Timestamps, Base):
     limit_hours: Mapped[float | None] = mapped_column(Float)
     flow_l_s: Mapped[float | None] = mapped_column(Float)  # расход на водовыпуске
     turn_interval_days: Mapped[int | None] = mapped_column(Integer)
+    turn_hours: Mapped[float | None] = mapped_column(Float)  # длительность одной очереди
     failure_months: Mapped[list[int] | None] = mapped_column(sa.ARRAY(Integer))  # «месяцы срывов»
     legal_basis: Mapped[str | None] = mapped_column(String(200))
     source_type: Mapped[SourceType] = mapped_column(enum_col(SourceType))

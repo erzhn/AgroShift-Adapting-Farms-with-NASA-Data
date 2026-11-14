@@ -29,7 +29,7 @@ from app.models.enums import (
 )
 
 
-class Farm(UUIDPk, Timestamps, Base):
+class Farm(UUIDPk, Timestamps, ProvenanceMixin, Base):
     __tablename__ = "farms"
 
     workspace_id: Mapped[uuid.UUID] = mapped_column(
@@ -85,7 +85,7 @@ class Field(UUIDPk, Timestamps, ProvenanceMixin, Base):
     seasons: Mapped[list["CropSeason"]] = relationship(cascade="all, delete-orphan")
 
 
-class Orchard(UUIDPk, Timestamps, Base):
+class Orchard(UUIDPk, Timestamps, ProvenanceMixin, Base):
     """Сад — отдельная модель на горизонт до 25 лет (М7)."""
 
     __tablename__ = "orchards"
@@ -101,7 +101,7 @@ class Orchard(UUIDPk, Timestamps, Base):
     yield_curve_id: Mapped[str | None] = mapped_column(String(64))
 
 
-class Herd(UUIDPk, Timestamps, Base):
+class Herd(UUIDPk, Timestamps, ProvenanceMixin, Base):
     __tablename__ = "herds"
 
     farm_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("farms.id", ondelete="CASCADE"),
@@ -136,7 +136,7 @@ class Obligation(UUIDPk, Timestamps, Base):
     penalty_som: Mapped[int | None] = mapped_column(BigInteger)
 
 
-class CashAccount(UUIDPk, Timestamps, Base):
+class CashAccount(UUIDPk, Timestamps, ProvenanceMixin, Base):
     """Свободные средства хозяйства (UC-1, шаг «Деньги»)."""
 
     __tablename__ = "cash_accounts"
@@ -162,7 +162,7 @@ class Goal(UUIDPk, Timestamps, Base):
     priority_weights: Mapped[dict] = mapped_column(JSONB, default=dict)
 
 
-class CropSeason(UUIDPk, Timestamps, Base):
+class CropSeason(UUIDPk, Timestamps, ProvenanceMixin, Base):
     """Культура на поле в сезон. Одно поле — одна основная культура + опц. пожнивная."""
 
     __tablename__ = "crop_seasons"

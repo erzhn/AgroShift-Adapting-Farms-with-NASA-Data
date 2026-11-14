@@ -52,7 +52,7 @@ class Crop(UUIDPk, Timestamps, ProvenanceMixin, Base):
                                                          cascade="all, delete-orphan")
 
 
-class CropVariant(UUIDPk, Timestamps, Base):
+class CropVariant(UUIDPk, Timestamps, ProvenanceMixin, Base):
     __tablename__ = "crop_variants"
 
     crop_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("crops.id", ondelete="CASCADE"),
@@ -96,7 +96,7 @@ class PriceItem(UUIDPk, Timestamps, Base):
     farm_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("farms.id"))  # «свои цены»
 
 
-class CostNorm(UUIDPk, Timestamps, Base):
+class CostNorm(UUIDPk, Timestamps, ProvenanceMixin, Base):
     __tablename__ = "cost_norms"
 
     crop_variant_id: Mapped[uuid.UUID] = mapped_column(
