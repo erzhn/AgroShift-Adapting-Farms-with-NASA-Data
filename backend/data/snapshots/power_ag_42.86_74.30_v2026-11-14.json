@@ -1,0 +1,70 @@
+{
+  "source": "nasa_power_daily_ag",
+  "product": "NASA POWER Daily, community AG",
+  "product_version": "v2.10.3",
+  "name": "sokuluk",
+  "name_ru": "Сокулук",
+  "name_en": "Sokuluk",
+  "lat": 42.86,
+  "lon": 74.3,
+  "cell_elevation_m": 721.28,
+  "grid_cell": {
+    "center": [
+      74.375,
+      43.0
+    ],
+    "bbox": [
+      74.0625,
+      42.75,
+      74.6875,
+      43.25
+    ],
+    "lat_step": 0.5,
+    "lon_step": 0.625
+  },
+  "period_start": "1995-01-01",
+  "period_end": "2025-12-31",
+  "fetched_at": "2026-11-14T19:06:20+00:00",
+  "request_url": "https://power.larc.nasa.gov/api/temporal/daily/point?parameters=T2M%2CT2M_MAX%2CT2M_MIN%2CT2MDEW%2CRH2M%2CWS2M%2CALLSKY_SFC_SW_DWN%2CPRECTOTCORR&community=AG&longitude=74.3&latitude=42.86&start=19950101&end=20251231&format=JSON",
+  "columns": {
+    "t2m": "°C",
+    "tmax": "°C",
+    "tmin": "°C",
+    "tdew": "°C",
+    "rh": "%",
+    "ws2m": "m/s",
+    "rs": "MJ/m²/day",
+    "precip": "mm/day"
+  },
+  "units_original": {
+    "T2M": "C",
+    "T2M_MAX": "C",
+    "T2M_MIN": "C",
+    "T2MDEW": "C",
+    "RH2M": "%",
+    "WS2M": "m/s",
+    "ALLSKY_SFC_SW_DWN": "MJ/m^2/day",
+    "PRECTOTCORR": "mm/day"
+  },
+  "power_sources": [
+    "MERRA2",
+    "SRB",
+    "SYN1DEG",
+    "POWER"
+  ],
+  "missing": {
+    "t2m": 0,
+    "tmax": 0,
+    "tmin": 0,
+    "tdew": 0,
+    "rh": 0,
+    "ws2m": 0,
+    "rs": 0,
+    "precip": 0
+  },
+  "attribution": "These data were obtained from the NASA Langley Research Center (LaRC) POWER Project funded through the NASA Earth Science/Applied Science Program.",
+  "code": "power_ag_42.86_74.30_v2026-11-14",
+  "rows": 11323,
+  "sha256": "072b8d457a2756efd3cea67f965cdce5eace392a1e7c4cca7cfd4db493144c4d",
+  "storage_uri": "power_ag_42.86_74.30_v2026-11-14.parquet"
+}
