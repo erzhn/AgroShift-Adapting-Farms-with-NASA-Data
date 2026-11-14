@@ -26,6 +26,7 @@ from app.modules.farms.schemas import (
     Point,
     Polygon,
     Price,
+    Rotation,
     Scenario,
     Source,
     WaterRight,
@@ -58,6 +59,7 @@ class SeedBundle(Contract):
     farm: Farm
     canal: DemoCanal
     scenarios: list[Scenario]
+    rotations: list[Rotation] = Attr(default_factory=list)
 
 
 def _provenance(values: dict, source: Source) -> dict[str, Source]:
@@ -292,4 +294,11 @@ def load_seed() -> SeedBundle:
         farm=farm,
         canal=DemoCanal(conveyance_efficiency=profile["conveyance_efficiency"]),
         scenarios=scenarios,
+        rotations=[
+            Rotation(
+                id=seed_id(f"rotation/{row['code']}"),
+                **{key: value for key, value in row.items() if key != "code"},
+            )
+            for row in raw.get("rotations", [])
+        ],
     )

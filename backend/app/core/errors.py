@@ -73,4 +73,5 @@ def install_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(RequestValidationError)
     async def _validation_handler(_: Request, exc: RequestValidationError) -> JSONResponse:
         return _problem(422, "Unprocessable Entity", "Ошибка валидации входных данных",
-                        errors=exc.errors())
+                        errors=[{"loc": error["loc"], "msg": error["msg"], "type": error["type"]}
+                                for error in exc.errors()])

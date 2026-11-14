@@ -1,40 +1,7 @@
-"""farms — заглушки по разделу 11.2 ТЗ. Реализация -> app/services + agroshift_core."""
-
-from fastapi import APIRouter
+"""Farm CRUD is owned by modules.farms; remaining full-product assets are separate."""
 
 from app.core.errors import NotImplementedYetError
-
-router = APIRouter(tags=["farms"])
-
-
-@router.get("/farms", summary="Список хозяйств")
-def farms_1() -> None:
-    raise NotImplementedYetError("Список хозяйств", "7.1")
-
-
-@router.post("/farms", summary="Создать хозяйство")
-def farms_2() -> None:
-    raise NotImplementedYetError("Создать хозяйство", "UC-1")
-
-
-@router.get("/farms/{farm_id}", summary="Хозяйство")
-def farms_3() -> None:
-    raise NotImplementedYetError("Хозяйство", "7.1")
-
-
-@router.patch("/farms/{farm_id}", summary="Изменить хозяйство")
-def farms_4() -> None:
-    raise NotImplementedYetError("Изменить хозяйство", "7.1")
-
-
-@router.get("/farms/{farm_id}/fields", summary="Поля хозяйства (GeoJSON)")
-def farms_5() -> None:
-    raise NotImplementedYetError("Поля хозяйства (GeoJSON)", "FR-1.4")
-
-
-@router.post("/farms/{farm_id}/fields", summary="Добавить поле")
-def farms_6() -> None:
-    raise NotImplementedYetError("Добавить поле", "FR-1.4")
+from app.modules.farms.router import router
 
 
 @router.get("/farms/{farm_id}/orchards", summary="Сады")

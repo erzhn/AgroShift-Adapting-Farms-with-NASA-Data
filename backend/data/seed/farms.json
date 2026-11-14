@@ -143,6 +143,11 @@
     "turn_interval_days": 8, "turn_hours": 8, "flow_l_s": 60, "limit_m3": 40000,
     "failure_months": [8], "conveyance_efficiency": 0.5
   },
+  "rotations": [
+    {"code": "forage", "zone_id": "chuy", "name": "Кормовой севооборот", "sequence": ["alfalfa", "alfalfa", "wheat", "maize"], "status": "experimental"},
+    {"code": "grain_legume", "zone_id": "chuy", "name": "Зерно и бобовые", "sequence": ["wheat", "beans", "maize", "wheat"], "status": "experimental"},
+    {"code": "diversified", "zone_id": "chuy", "name": "Смешанное хозяйство", "sequence": ["maize", "wheat", "alfalfa", "alfalfa"], "status": "experimental"}
+  ],
   "scenarios": [
     {"preset_code": "like_2023", "name": "Как 2023 год", "climate_mode": "historical_year", "climate_params": {"year": 2023}},
     {"preset_code": "low_snow", "name": "Малоснежная зима", "climate_mode": "percentile", "climate_params": {"percentile": 50}, "water_supply_factor": 0.7, "supply_shift_days": 10},

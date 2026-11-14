@@ -19,10 +19,11 @@ import {
   getCashflow,
 } from "../../lib/api/strategies";
 import EChart from "./EChart";
-import { money, useLang } from "./i18n";
+import { DICT, money, useLang } from "./i18n";
 import css from "./strategies.module.css";
 
 interface Props {
+  language?: "ru" | "ky" | "en";
   runId?: string;
   farmId?: string;
   strategyType?: StrategyType;
@@ -37,6 +38,37 @@ interface Props {
 const INK = "#1c2b24";
 const GREEN = "#1f6f4a";
 const RED = "#c0392b";
+const KY_CASH = {
+  ...DICT.ru,
+  noGap: "Акча жыл бою жетет",
+  gapIn: (m: string) => `Акча жетпеген ай: ${m}`,
+  needMoney: (s: string) => `${s} жетишпейт`,
+  money: "Айлык акча агымы",
+  moneyHint: "Айдын аягындагы калдык. Тилке — начар (P10) жана жакшы (P90) жылдын аралыгы.",
+  reserve: "Үй-бүлөнүн резерви",
+  median: "Кадимки жыл",
+  band: "Начар — жакшы жыл",
+  gapMark: "Жетишсиздик",
+  loading: "Эсептелүүдө…",
+  error: "Эсептөө алынган жок",
+  thousand: "миң",
+  million: "млн",
+  som: "сом",
+  monthsFull: [
+    "январь",
+    "февраль",
+    "март",
+    "апрель",
+    "май",
+    "июнь",
+    "июль",
+    "август",
+    "сентябрь",
+    "октябрь",
+    "ноябрь",
+    "декабрь",
+  ],
+};
 
 async function resolveRun(
   runId: string | undefined,
@@ -60,6 +92,7 @@ async function resolveRun(
 }
 
 export default function MoneyLane({
+  language,
   runId,
   farmId,
   strategyType = "user",
@@ -68,7 +101,9 @@ export default function MoneyLane({
   height,
   compact = false,
 }: Props) {
-  const [lang, t] = useLang();
+  const [storedLang, storedText] = useLang();
+  const lang = language === "en" ? "en" : language ? "ru" : storedLang;
+  const t = language === "ky" ? KY_CASH : language ? DICT[lang] : storedText;
   const [data, setData] = useState<CashflowResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -223,7 +258,12 @@ export default function MoneyLane({
     };
   }, [data, month, compact, t, lang]);
 
-  if (error) return <p className={css.error}>{t.error}: {error}</p>;
+  if (error)
+    return (
+      <p className={css.error}>
+        {t.error}: {error}
+      </p>
+    );
   if (!option || !data) return <p className={css.muted}>{t.loading}</p>;
 
   const gap = data.gap;

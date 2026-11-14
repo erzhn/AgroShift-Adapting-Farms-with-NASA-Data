@@ -6,8 +6,9 @@
 
 NASA Space Apps Challenge 2026 · челлендж **«Field Shift: Adapting Farms with NASA Data»** · Бишкек, 14–15 ноября 2026.
 
-> **Статус: каркас.** Архитектура, БД, Docker и контракты API готовы; расчётные модули и
-> эндпоинты — заглушки (`501 Not Implemented` со ссылкой на раздел ТЗ). Бери модуль и реализуй.
+> **Статус:** реализованы хозяйства и справочники, главный экран, профиль и модуль
+> стратегий/денег. Вода и климат пока используют демонстрационные оценки; часть
+> остальных модулей остаётся каркасом. [Все 7 задач Баямана](docs/bayaman-complete.md).
 
 ---
 
@@ -20,6 +21,7 @@ NASA Space Apps Challenge 2026 · челлендж **«Field Shift: Adapting Far
 | Расчётное ядро | NumPy, pandas (пакет `agroshift_core`) |
 | Данные | NASA POWER (REST), снимки в Parquet |
 | Сборка | Docker, Docker Compose |
+| Интерфейс | Next.js, React, TypeScript, MapLibre, ECharts |
 
 ## Быстрый старт
 
@@ -29,17 +31,22 @@ NASA Space Apps Challenge 2026 · челлендж **«Field Shift: Adapting Far
 git clone <repo-url> agroshift
 cd agroshift
 cp .env.example .env
-docker compose up --build
+docker compose up --build -d
+docker compose exec -T api python -m scripts.seed
 ```
 
 Проверка:
 
+- Интерфейс хозяйства: http://localhost:3000
 - Swagger (все эндпоинты): http://localhost:8000/docs
 - Живость: http://localhost:8000/health
 - БД + PostGIS: http://localhost:8000/health/db
 
 При старте контейнер `api` сам применяет миграции (`alembic upgrade head`).
 Код примонтирован в контейнер — правки в `backend/` подхватываются без пересборки.
+Seed загружает Асана, 5 культур, 5 сценариев и экспериментальные севообороты;
+повторный запуск сохраняет изменения пользователя. Для фронтенда без Docker
+и подключения лент см. [frontend/README.md](frontend/README.md).
 
 Postgres снаружи доступен на `localhost:5433` (логин/пароль/БД: `agroshift`).
 Веб-интерфейс к БД: `docker compose --profile tools up adminer` → http://localhost:8080
@@ -59,10 +66,10 @@ docker compose down -v                             # остановить и у�
 
 ```
 .
-├── docker-compose.yml        db (PostGIS) + api (+ adminer в профиле tools)
+├── docker-compose.yml        db (PostGIS) + api + frontend (+ adminer в профиле tools)
 ├── .env.example              переменные окружения → скопировать в .env
 ├── docs/architecture.md      слои, потоки данных, договорённости
-├── frontend/                 место под Next.js (пока пусто)
+├── frontend/                 Next.js: хозяйство, профиль, справочники, стратегии
 └── backend/
     ├── Dockerfile
     ├── requirements.txt / requirements-dev.txt

@@ -31,3 +31,5 @@ backend/data/runs/
 # Frontend
 node_modules/
 .next/
+*.tsbuildinfo
+frontend/test-results/
