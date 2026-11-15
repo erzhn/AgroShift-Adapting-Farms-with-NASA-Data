@@ -140,7 +140,7 @@
       {"code": "maize", "name": "Нижнее", "crop": "maize", "area_ha": 2, "lon": 74.305, "lat": 42.86, "sowing_date": "2027-04-25", "harvest_date": "2027-08-22"}
     ],
     "herd_head_count": 8, "orchard_planted_year": 2007, "orchard_density_trees_ha": 400,
-    "turn_interval_days": 8, "turn_hours": 8, "flow_l_s": 60, "limit_m3": 40000,
+    "turn_interval_days": 8, "turn_hours": 16, "flow_l_s": 60, "limit_m3": 40000,
     "failure_months": [8], "conveyance_efficiency": 0.5
   },
   "rotations": [

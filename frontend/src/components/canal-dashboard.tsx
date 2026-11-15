@@ -8,7 +8,7 @@ import DemandChart from "@/src/components/demand-chart";
 import { buildCanalChartData } from "@/src/lib/canal-chart";
 
 const CanalMap = dynamic(() => import("@/src/components/canal-map"), { ssr: false });
-const API_ROOT = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const API_ROOT = process.env.NEXT_PUBLIC_API_URL ?? "";
 const API = `${API_ROOT.replace(/\/$/, "")}${API_ROOT.endsWith("/api/v1") ? "" : "/api/v1"}`;
 
 type Geo = Geometry | null;

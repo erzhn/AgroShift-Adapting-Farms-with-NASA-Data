@@ -21,6 +21,7 @@ import Modal from "./Modal";
 import PlanningLanes, { type FarmIntegrations } from "./PlanningLanes";
 import ProfileForm from "./ProfileForm";
 import MoneyIntegration from "./MoneyIntegration";
+import WaterIntegration from "./WaterIntegration";
 import useFarmStrategies from "./useFarmStrategies";
 import { previewFields } from "@/lib/planning";
 import { readPreference, writePreference } from "@/lib/preferences";
@@ -69,6 +70,7 @@ export default function Dashboard({
   const field = displayFields.find((f) => f.id === selected);
   const activeIntegrations: FarmIntegrations = {
     ...integrations,
+    WaterLane: integrations.WaterLane || WaterIntegration,
     MoneyLane: integrations.MoneyLane || (chosenStrategy ? MoneyIntegration : undefined),
   };
   const months = monthNames(language);
@@ -102,7 +104,9 @@ export default function Dashboard({
       setPresets(scenarioList);
       setRotations(rotationList);
       const remembered = readPreference("agroshift-farm");
-      const first = farmList.find((f) => f.id === remembered) || farmList[0];
+      // demo: without a remembered farm open the richest one (Асан, 3 fields)
+      const richest = [...farmList].sort((a, b) => b.fields.length - a.fields.length)[0];
+      const first = farmList.find((f) => f.id === remembered) || richest;
       setFarmId(first?.id || "");
       setSelected(first?.fields[0]?.id || null);
       if (first) setYear(planYear(first.fields));
@@ -263,6 +267,10 @@ export default function Dashboard({
           <a className="nav-item" href="/canal">
             <Icon name="drop" />
             Кабинет АВП
+          </a>
+          <a className="nav-item" href="/nasa">
+            <Icon name="leaf" />
+            NASA
           </a>
         </nav>
         <div className="sidebar-season">
@@ -554,6 +562,19 @@ export default function Dashboard({
                         <strong>{seasonFor(field, year)?.harvest_date || "—"}</strong>
                       </span>
                     </div>
+                    <a
+                      className="button secondary small"
+                      href={`/field/${encodeURIComponent(field.id)}?${new URLSearchParams({
+                        lang: language,
+                        ...(strategyId !== "current" && chosenStrategy
+                          ? { strategy: chosenStrategy.run_id }
+                          : {}),
+                        ...(scenario ? { scenario: scenario.preset_code } : {}),
+                      })}`}
+                    >
+                      <Icon name="drop" size={15} />
+                      {t("water")}
+                    </a>
                     <button
                       className="button secondary small"
                       onClick={() => openField(farm.fields.find((f) => f.id === field.id)!)}

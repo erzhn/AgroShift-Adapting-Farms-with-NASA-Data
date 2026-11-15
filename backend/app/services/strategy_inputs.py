@@ -553,7 +553,14 @@ def load_inputs(farm_id: str) -> FarmInputs:
                     simulate, candidate.fields[0], candidate.crops[candidate.fields[0].crop_id],
                     Scn(), years[:1],
                 )
-                return replace(candidate, status={**inputs.status, "water": "service"})
+                # вода посчитана сервисом М4–М6 на снимках NASA POWER — снимаем
+                # предупреждение адаптера про демонстрационную модель воды
+                warnings = tuple(w for w in inputs.warnings if not w.startswith("Вода и климат"))
+                return replace(
+                    candidate,
+                    status={**inputs.status, "water": "service"},
+                    warnings=(*warnings, "Вода и климат — NASA POWER (снимок), модель FAO-56"),
+                )
         except Exception as exc:  # noqa: BLE001
             log.exception("water.simulate_field не подошёл — вода считается на заглушке")
             return replace(

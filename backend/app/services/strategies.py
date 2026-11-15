@@ -12,6 +12,7 @@ import logging
 import re
 import threading
 import time
+from datetime import date
 from typing import NamedTuple
 
 import numpy as np
@@ -519,6 +520,32 @@ def get_strategy(strategy_id: str) -> sch.StrategyOut:
         if run is not None and item["id"] == run["strategy_id"]:
             return sch.StrategyOut.model_validate(item)
     raise NotFoundError("Strategy", strategy_id)
+
+
+def get_field_plan(strategy_ref: str, field_id: str, year: int) -> dict | None:
+    """Культура и срок сева поля по стратегии — для ленты «Вода» (water.resolve_strategy_crop).
+
+    Принимает id стратегии (s_…) или прогона (r_…). None — поля в стратегии нет.
+    """
+    if not strategy_ref or strategy_ref[0] not in "sr":
+        return None
+    record = _record_for("Strategy", strategy_ref)
+    strategy_id = "s" + strategy_ref[1:]
+    run = record["runs"].get("r" + strategy_ref[1:])
+    item = next(
+        (x for x in record["response"]["strategies"]
+         if x["id"] == strategy_id or (run is not None and x["id"] == run["strategy_id"])),
+        None,
+    )
+    if item is None:
+        raise NotFoundError("Strategy", strategy_ref)
+    decision = next((d for d in item["decisions"] if d["field_id"] == field_id), None)
+    if decision is None:
+        return None
+    crop = _engine(record["farm_id"], record["seed"]).inputs.crops.get(decision["crop_id"])
+    if crop is None:
+        return None
+    return {"crop": crop.raw or crop, "sowing_date": date(year, *crop.sowing_mmdd)}
 
 
 # ----------------------------------------------------------------------------- М9: деньги

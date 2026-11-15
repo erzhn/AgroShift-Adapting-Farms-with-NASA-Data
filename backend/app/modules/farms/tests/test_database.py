@@ -30,7 +30,7 @@ def test_seed_round_trip_and_detached_contracts(db):
     assert farm.area_ha == 6
     assert farm.cash_som == 150000
     assert farm.herds[0].head_count == 8
-    assert farm.water_rights[0].turn_hours == 8
+    assert farm.water_rights[0].turn_hours == 16
     assert all(field.geometry.type == "Polygon" for field in farm.fields)
     assert {season.crop_id for field in farm.fields for season in field.seasons} == {
         seed_id("crop/apple"),

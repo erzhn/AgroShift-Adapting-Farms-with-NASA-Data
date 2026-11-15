@@ -1,7 +1,8 @@
 // Клиент API модуля «Вода и климат». Типы повторяют backend/app/modules/water/schemas.py.
 // Единицы: вода — мм и м³ (1 мм на 1 га = 10 м³), даты — ISO, декады — индекс 1..36.
 
-const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000").replace(/\/$/, "");
+// relative by default: Next rewrites /api/* to the backend (next.config.ts)
+const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
 const BASE = `${API_URL}/api/v1`;
 
 export type StageName = "ini" | "dev" | "mid" | "late";
