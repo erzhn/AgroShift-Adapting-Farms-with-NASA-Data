@@ -6,6 +6,7 @@ import pytest
 from agroshift_core.cashflow import (
     cash_path,
     delay_payments,
+    financing_to_hold,
     find_cash_gap,
     gap_probability,
     sell_with_channel,
@@ -134,3 +135,22 @@ def test_payment_delay_hits_cash_but_not_income():
     assert late.income.tolist() == pytest.approx(now.income.tolist())
     assert late.cash[0, SEP] < now.cash[0, SEP]
     assert late.cash[0, -1] == pytest.approx(now.cash[0, -1])
+
+def test_financing_is_counted_on_bad_years_not_the_median():
+    # 10 лет: в 7 денег хватает, в 3 не хватает 5, 20 и 40 тыс. в октябре (индекс 9)
+    cash = np.full((10, 12), 30_000.0)
+    for row, low in zip((7, 8, 9), (5_000.0, -10_000.0, -30_000.0), strict=True):
+        cash[row, 9] = low
+    assert find_cash_gap(np.median(cash, axis=0), RESERVE).feasible  # медиана разрыва не видит
+    assert gap_probability(cash, RESERVE) == pytest.approx(0.3)
+    at10 = financing_to_hold(cash, RESERVE, 0.10)  # можно оставить без денег 1 год из 10
+    assert at10.amount_som == pytest.approx(20_000) and at10.month == 9
+    assert gap_probability(cash + at10.amount_som, RESERVE) <= 0.10
+    at5 = financing_to_hold(cash, RESERVE, 0.05)  # ни одного года
+    assert at5.amount_som == pytest.approx(40_000)
+    assert gap_probability(cash + at5.amount_som, RESERVE) == 0
+
+
+def test_no_financing_when_reserve_holds():
+    need = financing_to_hold(np.full((30, 12), 50_000.0), RESERVE, 0.10)
+    assert need.amount_som == 0 and need.month is None

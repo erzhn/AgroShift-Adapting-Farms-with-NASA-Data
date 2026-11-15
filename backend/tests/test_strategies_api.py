@@ -133,6 +133,39 @@ def test_stress_original_breaks_fixed_holds_within_two_seconds():
     assert st["answers"]["feed_extra_purchase_som"] > 0  # корм подорожал на 40%
 
 
+def test_when_no_scheme_holds_reserve_strategies_come_with_financing():
+    # оплата через 120 дней, дорогой корм, дешёвая продукция: резерв не держит ни одна схема
+    gen = generate(
+        scenario={"payment_delay_days": 120, "feed_price_factor": 1.5, "price_factor": 0.6}
+    )
+    built = [s for s in gen["strategies"] if "user" not in s["types"]]
+    assert built, gen["excluded"]
+    for s in built:
+        fin = s["financing"]
+        assert "needs_financing" in s["flags"]
+        assert fin["amount_som"] > 0 and fin["month"] in range(1, 13)
+    kinds = {k for s in gen["strategies"] for k in s["types"]}
+    assert kinds | {x["type"] for x in gen["excluded"]} == {
+        "user",
+        "income",
+        "resilient",
+        "water_light",
+    }
+
+
+def test_stress_reports_financing_when_crop_change_is_not_enough():
+    gen = generate()
+    run_id = strategy(gen, "user")["run_id"]
+    body = {"payment_delay_days": 120, "feed_price_factor": 1.5, "water_supply_factor": 0.7}
+    st = client.post(f"{API}/runs/{run_id}/stress", json=body).json()
+    assert st["fix_needed"]
+    plan = st["fixed"] or st["stressed"]
+    if plan["cash_gap"]["probability"] > 0.10:
+        assert st["fixed_financing"]["amount_som"] > 0
+    else:
+        assert st["fixed_financing"] is None
+
+
 def test_stress_at_base_conditions_changes_nothing():
     gen = generate()
     st = client.post(f"{API}/runs/{strategy(gen, 'resilient')['run_id']}/stress", json={}).json()

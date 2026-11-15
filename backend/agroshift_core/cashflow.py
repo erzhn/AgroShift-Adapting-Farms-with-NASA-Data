@@ -84,3 +84,32 @@ def gap_probability(cash: np.ndarray, reserve_som: float) -> float:
     """Доля выборок, в которых остаток хотя бы раз опускается ниже резерва."""
     cash = np.atleast_2d(np.asarray(cash, dtype=float))
     return float(((cash - reserve_som).min(axis=-1) < -1e-6).mean())
+
+@dataclass(frozen=True)
+class Financing:
+    """Сколько денег привлечь и к какому месяцу, чтобы план держал резерв (пример 15.3)."""
+
+    amount_som: float  # 0 — план держится без финансирования
+    month: int | None  # индекс месяца 0..n-1, к которому нужны деньги; None — не нужны
+
+
+def financing_to_hold(cash: np.ndarray, reserve_som: float, p_gap_limit: float) -> Financing:
+    """Минимальная сумма, с которой разрыв остаётся не чаще, чем в `p_gap_limit` выборок.
+
+    Считается по плохим годам, а не по медиане: медианная траектория часто держит резерв,
+    хотя в 30% лет денег не хватает. Каждой выборке нужно max(0, reserve − min Cash);
+    допускается не больше floor(p_gap_limit · n) выборок, которым суммы не хватит.
+    Месяц — первый, в котором та же порядковая траектория опускается ниже резерва.
+    """
+    margin = np.atleast_2d(np.asarray(cash, dtype=float)) - reserve_som
+    n = margin.shape[0]
+    allowed = int(np.floor(p_gap_limit * n + 1e-9))
+    if allowed >= n:
+        return Financing(0.0, None)
+    need = np.sort(np.maximum(0.0, -margin.min(axis=-1)))
+    amount = float(need[n - 1 - allowed])
+    if amount <= 1e-6:
+        return Financing(0.0, None)
+    by_month = np.sort(margin, axis=0)[allowed]  # (allowed+1)-я худшая траектория по месяцам
+    below = np.flatnonzero(by_month < -1e-6)
+    return Financing(amount, int(below[0]) if below.size else None)

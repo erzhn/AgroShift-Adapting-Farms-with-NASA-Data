@@ -57,13 +57,29 @@ export function StrategyCards({ data, selectedId, onSelect, t, lang }: Props) {
               {money(s.metrics.income_som.p10, t, lang)} — {money(s.metrics.income_som.p90, t, lang)}
               , {t.range}
             </span>
-            <span className={gap.first_month ? css.chipBad : css.chipOk}>
+            <span
+              className={
+                gap.first_month
+                  ? css.chipBad
+                  : s.flags.includes("cash_gap_risk")
+                    ? css.chipWarn
+                    : css.chipOk
+              }
+            >
               {gap.first_month ? t.gapIn(t.monthsFull[gap.first_month - 1]) : t.noGap}
               {gap.probability > 0 ? ` · ${t.gapChance(percent(gap.probability))}` : ""}
             </span>
+            {s.financing && (
+              <span className={css.chipWarn}>
+                {t.financing(
+                  money(s.financing.amount_som, t, lang),
+                  s.financing.month ? t.monthsTo[s.financing.month - 1] : null,
+                )}
+              </span>
+            )}
             {s.types.length > 1 && <span className={css.chip}>{t.merged}</span>}
             {s.flags
-              .filter((f) => f !== "cash_gap_risk")
+              .filter((f) => f !== "cash_gap_risk" && !(f === "needs_financing" && s.financing))
               .map((f) => (
                 <span key={f} className={css.chipWarn}>
                   {t.flags[f] ?? f}

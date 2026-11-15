@@ -35,7 +35,13 @@ const ru = {
     incomplete: "Расчёт неполный",
     no_buyer: "Часть урожая без покупателя",
     rotation_violation: "Нарушен севооборот",
+    needs_financing: "Нужен кредит",
   } as Record<string, string>,
+  financing: (s: string, m: string | null) =>
+    m ? `Держит резерв, если привлечь ${s} к ${m}` : `Держит резерв, если привлечь ${s}`,
+  fixedFinancing: (s: string, m: string | null) =>
+    `Смены культур мало: чтобы план выдержал, нужно привлечь ${s}${m ? ` к ${m}` : ""}`,
+  monthsTo: ["январю", "февралю", "марту", "апрелю", "маю", "июню", "июлю", "августу", "сентябрю", "октябрю", "ноябрю", "декабрю"],
   excluded: (t: string, p: string, limit: string) =>
     `«${t}» не построена: ни одна схема не держит резерв семьи — лучший риск разрыва ${p} при допустимых ${limit}.`,
   excludedNeed: (s: string) => ` Не хватает около ${s}.`,
@@ -169,7 +175,12 @@ const en: typeof ru = {
     incomplete: "Incomplete calculation",
     no_buyer: "Part of harvest has no buyer",
     rotation_violation: "Rotation rule broken",
+    needs_financing: "Needs a loan",
   },
+  financing: (s, m) => (m ? `Holds the reserve with ${s} raised by ${m}` : `Holds the reserve with ${s} raised`),
+  fixedFinancing: (s, m) =>
+    `Changing crops is not enough: the plan holds only with ${s} raised${m ? ` by ${m}` : ""}`,
+  monthsTo: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
   excluded: (t, p, limit) =>
     `“${t}” was not built: no scheme keeps the family reserve — best gap risk is ${p}, allowed ${limit}.`,
   excludedNeed: (s) => ` About ${s} is missing.`,

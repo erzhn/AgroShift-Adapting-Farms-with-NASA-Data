@@ -90,6 +90,14 @@ class StrategyMetrics(BaseModel):
     win_share: float | None = Field(None, description="Доля выборок, где стратегия лучшая")
 
 
+class FinancingOut(BaseModel):
+    """Стратегия держит резерв только с привлечёнными деньгами (пример 15.3)."""
+
+    amount_som: int = Field(description="Сколько привлечь, сом; считается по плохим годам")
+    month: int | None = Field(description="1–12: к какому месяцу нужны деньги")
+    p_gap_limit: float = Field(description="С этой суммой разрыв не чаще этой доли лет")
+
+
 class StrategyOut(BaseModel):
     id: str
     run_id: str
@@ -101,7 +109,10 @@ class StrategyOut(BaseModel):
     metrics: StrategyMetrics
     flags: list[str] = Field(
         description="cash_gap_risk, depends_on_conditions, experimental, incomplete, "
-        "no_buyer, rotation_violation"
+        "needs_financing, no_buyer, rotation_violation"
+    )
+    financing: FinancingOut | None = Field(
+        None, description="Ни одна схема не держит резерв: эта — лучшая по цели, но с кредитом"
     )
     agro_status: Literal["approved", "experimental"]
     completeness: Literal["full", "partial"]
@@ -115,7 +126,7 @@ class ExcludedStrategy(BaseModel):
     constraint: str
     p_gap_limit: float
     best_p_gap: float
-    financing_needed_som: int
+    financing_needed_som: int = Field(description="Сколько привлечь лучшей схеме (по плохим годам)")
 
 
 class Provenance(BaseModel):
@@ -206,6 +217,11 @@ class StressResponse(BaseModel):
     baseline: PlanOutcome = Field(description="A — исходный план, базовые условия")
     stressed: PlanOutcome = Field(description="B — исходный план, новые условия")
     fixed: PlanOutcome | None = Field(description="C — исправленный план, новые условия")
+    fixed_financing: FinancingOut | None = Field(
+        None,
+        description="Смены культур мало: сколько привлечь плану C (или B, если C нет), "
+        "чтобы разрыв был не чаще 10% лет",
+    )
     fix_needed: bool
     fix_found: bool
     damage_som: int = Field(description="A − B по медиане дохода")
