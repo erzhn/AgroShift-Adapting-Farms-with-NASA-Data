@@ -70,6 +70,12 @@ export interface CashGap {
   probability: number;
 }
 
+export interface Financing {
+  amount_som: number; // сколько привлечь; по плохим годам
+  month: number | null; // 1–12, к какому месяцу нужны деньги
+  p_gap_limit: number; // с этой суммой разрыв не чаще этой доли лет
+}
+
 export interface StrategyMetrics {
   income_som: Percentiles;
   cvar10_som: number;
@@ -95,6 +101,7 @@ export interface Strategy {
   summary_en: string;
   metrics: StrategyMetrics;
   flags: string[];
+  financing?: Financing | null; // ни одна схема не держит резерв — эта лучшая, но с кредитом
   agro_status: "approved" | "experimental";
   completeness: "full" | "partial";
   unknown_inputs: string[];
@@ -177,6 +184,7 @@ export interface StressResponse {
   baseline: PlanOutcome; // A — исходный план, базовые условия
   stressed: PlanOutcome; // B — исходный план, новые условия
   fixed: PlanOutcome | null; // C — исправленный план, новые условия
+  fixed_financing?: Financing | null; // смены культур мало: сколько привлечь плану C (или B)
   fix_needed: boolean;
   fix_found: boolean;
   damage_som: number; // A − B

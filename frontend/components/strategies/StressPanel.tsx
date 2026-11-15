@@ -347,6 +347,17 @@ export default function StressPanel({ runId, t, lang }: Props) {
               )}
             </div>
 
+            {result.fixed_financing && (
+              <p className={css.hint}>
+                {t.fixedFinancing(
+                  money(result.fixed_financing.amount_som, t, lang),
+                  result.fixed_financing.month
+                    ? t.monthsTo[result.fixed_financing.month - 1]
+                    : null,
+                )}
+              </p>
+            )}
+
             <dl className={css.adaptation}>
               <dt>{t.damage}</dt>
               <dd>{money(result.damage_som, t, lang)}</dd>

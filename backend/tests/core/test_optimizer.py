@@ -47,6 +47,43 @@ def test_no_feasible_scheme_returns_reason_not_artificial_strategy():
     assert sel.excluded["income"]["financing_needed_som"] == pytest.approx(25_000)
 
 
+def test_no_feasible_scheme_with_financing_gives_best_per_goal_and_amount():
+    #                user   доходная  устойчивая  водная
+    mean = np.array([100.0, 200.0, 150.0, 180.0])
+    cv10 = np.array([40.0, 60.0, 110.0, 70.0])
+    pgap = np.array([0.7, 0.4, 0.3, 0.5])
+    peak = np.array([900.0, 950.0, 800.0, 500.0])
+    fin10 = np.array([90_000.0, 80_000.0, 50_000.0, 60_000.0])
+    fin5 = fin10 + 10_000
+    sel = select_strategies(
+        mean, cv10, pgap, peak, fin10, financing_at_limit=fin10, financing_at_resilient=fin5
+    )
+    assert sel.chosen == {"user": 0, "income": 1, "resilient": 2, "water_light": 3}
+    assert sel.financed == {"income": 80_000, "resilient": 60_000, "water_light": 60_000}
+    assert not sel.excluded
+
+
+def test_financing_fallback_skips_rotation_violations_and_keeps_feasible_goals():
+    pgap = np.array([0.7, np.inf, 0.04])  # схема 1 нарушает севооборот
+    mean = np.array([100.0, 999.0, 120.0])
+    fin = np.array([50_000.0, 0.0, 0.0])
+    sel = select_strategies(
+        mean, mean, pgap, np.ones(3), fin, financing_at_limit=fin, financing_at_resilient=fin
+    )
+    assert sel.chosen["income"] == 2 and sel.chosen["resilient"] == 2
+    assert not sel.financed  # допустимая схема есть — финансирование не нужно
+    only_bad = select_strategies(
+        mean[:2],
+        mean[:2],
+        np.array([np.inf, np.inf]),
+        np.ones(2),
+        fin[:2],
+        financing_at_limit=fin[:2],
+        financing_at_resilient=fin[:2],
+    )
+    assert set(only_bad.excluded) == {"income", "resilient", "water_light"}
+
+
 def test_win_share():
     income = np.array([[1, 5, 5, 1], [2, 1, 1, 0]])
     assert win_share(income).tolist() == [0.75, 0.25]

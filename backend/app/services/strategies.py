@@ -18,8 +18,14 @@ import numpy as np
 
 from agroshift_core import MODEL_VERSION
 from agroshift_core.breakpoints import bisect_threshold, historical_frequency, safety_margin
-from agroshift_core.cashflow import find_cash_gap, gap_probability
-from agroshift_core.optimizer import P_GAP_LIMIT, enumerate_schemes, select_strategies, win_share
+from agroshift_core.cashflow import financing_to_hold, find_cash_gap, gap_probability
+from agroshift_core.optimizer import (
+    P_GAP_LIMIT,
+    P_GAP_RESILIENT,
+    enumerate_schemes,
+    select_strategies,
+    win_share,
+)
 from agroshift_core.plan_eval import Conditions, Noise, PlanPart, PlanResult, evaluate_plan
 from agroshift_core.stress import adaptation_price, neighbours, pick_fix
 from agroshift_core.uncertainty import cvar, lognormal_noise, percentiles, result_hash
@@ -37,6 +43,9 @@ from app.services.strategy_inputs import (
 
 log = logging.getLogger(__name__)
 
+# Версия правил выбора стратегий: входит в ключ кэша прогонов, чтобы после смены правил
+# не отдавались сохранённые ответы, посчитанные по-старому. 2 — финансирование сверх лимита.
+SELECTION_RULES = 2
 PRICE_SIGMA = 0.15  # шум цен продукции между годами (оценка; раздел 8.10 допускает до 0,25)
 MILK_SIGMA = 0.05
 FEED_SIGMA = 0.15
@@ -416,7 +425,7 @@ def generate(farm_id: str, req: sch.GenerateRequest) -> sch.GenerateResponse:
     engine = _engine(farm_id, req.seed)
     scn = _scn(req.scenario)
     generation_id = result_hash(
-        [farm_id, _fingerprint(engine.inputs), repr(scn), req.seed, MODEL_VERSION]
+        [farm_id, _fingerprint(engine.inputs), repr(scn), req.seed, MODEL_VERSION, SELECTION_RULES]
     )[:10]
     cached = _load(generation_id)
     if cached is not None:
@@ -429,16 +438,21 @@ def generate(farm_id: str, req: sch.GenerateRequest) -> sch.GenerateResponse:
 
     k = len(engine.schemes)
     mean_income, cvar10, p_gap = np.zeros(k), np.zeros(k), np.zeros(k)
-    peak_water, financing = np.zeros(k), np.zeros(k)
+    peak_water, fin10, fin5 = np.zeros(k), np.zeros(k), np.zeros(k)
     for i, scheme in enumerate(engine.schemes):
         _, res = engine.run(scheme, scn)
         mean_income[i] = res.income.mean()
         cvar10[i] = cvar(res.income)
         peak_water[i] = res.gross_m3[:, peak].sum(axis=1).mean()
-        financing[i] = find_cash_gap(engine.median_cash(res), reserve).financing_needed_som
+        # по плохим годам: сколько привлечь, чтобы разрыв был не чаще лимита цели
+        fin10[i] = financing_to_hold(res.cash, reserve, P_GAP_LIMIT).amount_som
+        fin5[i] = financing_to_hold(res.cash, reserve, P_GAP_RESILIENT).amount_som
         # схемы с нарушением севооборота в оптимизации не участвуют
         p_gap[i] = gap_probability(res.cash, reserve) if engine.rotation_ok(scheme) else np.inf
-    selection = select_strategies(mean_income, cvar10, p_gap, peak_water, financing)
+    selection = select_strategies(
+        mean_income, cvar10, p_gap, peak_water, fin10,
+        financing_at_limit=fin10, financing_at_resilient=fin5,
+    )
 
     by_scheme: dict[int, list[str]] = {}
     for kind in TYPE_ORDER:
@@ -469,6 +483,9 @@ def generate(farm_id: str, req: sch.GenerateRequest) -> sch.GenerateResponse:
             flags.append("no_buyer")
         if not engine.rotation_ok(scheme):
             flags.append("rotation_violation")
+        financing = _financing_out(engine, res, kinds, selection.financed)
+        if financing is not None:
+            flags.append("needs_financing")
         summary_ru, summary_en = engine.describe(scheme, user_scheme)
         if i == 0:
             summary_ru, summary_en = "Текущий план без изменений", "Current plan, no changes"
@@ -477,7 +494,7 @@ def generate(farm_id: str, req: sch.GenerateRequest) -> sch.GenerateResponse:
             sch.StrategyOut(
                 id=strategy_id, run_id=run_id, farm_id=farm_id, types=kinds,
                 decisions=engine.decisions(scheme), summary_ru=summary_ru, summary_en=summary_en,
-                metrics=metrics, flags=flags,
+                metrics=metrics, flags=flags, financing=financing,
                 agro_status="experimental" if experimental else "approved",
                 completeness=res.completeness, unknown_inputs=list(res.unknown_inputs),
             )
@@ -509,6 +526,29 @@ def generate(farm_id: str, req: sch.GenerateRequest) -> sch.GenerateResponse:
         }
     )
     return response
+
+
+def _financing_out(
+    engine: Engine, res: PlanResult, kinds: list[str], financed: dict[str, float]
+) -> sch.FinancingOut | None:
+    """Финансирование для стратегии, выбранной сверх лимита риска (пример 15.3).
+
+    Если схема совпала с несколькими целями, берётся самый строгий лимит (5% у «Пережить
+    плохой год»): с этой суммой схема держит резерв для всех совпавших целей.
+    """
+    limits = {"income": P_GAP_LIMIT, "water_light": P_GAP_LIMIT, "resilient": P_GAP_RESILIENT}
+    used = [limits[k] for k in kinds if k in financed]
+    if not used:
+        return None
+    limit = min(used)
+    need = financing_to_hold(res.cash, engine.inputs.econ.reserve_som, limit)
+    if need.amount_som <= 0:
+        return None
+    return sch.FinancingOut(
+        amount_som=_int(need.amount_som),
+        month=None if need.month is None else need.month + 1,
+        p_gap_limit=limit,
+    )
 
 
 def get_strategy(strategy_id: str) -> sch.StrategyOut:
@@ -626,9 +666,20 @@ def stress(run_id: str, req: sch.StressRequest) -> sch.StressResponse:
         fix_summary_ru=fix_ru,
         fix_summary_en=fix_en,
     )
+    # исправленный (или исходный, если смена культур не помогла) план всё ещё рвётся:
+    # сколько денег привлечь и к какому месяцу, чтобы он держал резерв (пример 15.3)
+    fixed_financing = None
+    if fix_needed and req.with_fix and _violates(engine, res_c):
+        need = financing_to_hold(res_c.cash, reserve, P_GAP_LIMIT)
+        if need.amount_som > 0:
+            fixed_financing = sch.FinancingOut(
+                amount_som=_int(need.amount_som),
+                month=None if need.month is None else need.month + 1,
+                p_gap_limit=P_GAP_LIMIT,
+            )
     return sch.StressResponse(
         run_id=run_id, scenario=sch.ScenarioIn.model_validate(req.model_dump()),
-        baseline=out_a, stressed=out_b, fixed=fixed,
+        baseline=out_a, stressed=out_b, fixed=fixed, fixed_financing=fixed_financing,
         fix_needed=fix_needed, fix_found=fixed is not None,
         damage_som=_int(price.damage_som), adaptation_gain_som=_int(price.gain_som),
         change_cost_som=_int(price.change_cost_som), answers=answers,
