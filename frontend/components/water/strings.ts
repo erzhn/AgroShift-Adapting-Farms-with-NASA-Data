@@ -7,6 +7,11 @@ import { useEffect, useState } from "react";
 export type Lang = "ru" | "en" | "ky";
 
 const ru = {
+  navHome: "← Моё хозяйство",
+  navStrategies: "Варианты будущего",
+  navCanal: "Кабинет АВП",
+  navNasa: "Данные NASA",
+  navLabel: "Разделы",
   loading: "Считаем…",
   error: "Не удалось получить данные",
   retry: "Повторить",
@@ -171,6 +176,11 @@ type Strings = typeof ru;
 
 const en: Strings = {
   ...ru,
+  navHome: "← My farm",
+  navStrategies: "Future options",
+  navCanal: "Water users office",
+  navNasa: "NASA data",
+  navLabel: "Sections",
   loading: "Calculating…",
   error: "Could not load data",
   retry: "Retry",

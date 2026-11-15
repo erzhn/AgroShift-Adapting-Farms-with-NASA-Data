@@ -34,9 +34,9 @@ def test_asan_areas_assets_and_irrigation(bundle):
     assert farm.herds[0].species == "cow"
     right = farm.water_rights[0]
     assert 7 <= right.turn_interval_days <= 10
-    assert right.turn_hours == 16
+    assert right.turn_hours == 32
     assert right.limit_hours is None  # Seasonal entitlement is not duration of a turn.
-    assert right.flow_l_s * 3.6 * right.turn_hours == 3456
+    assert right.flow_l_s * 3.6 * right.turn_hours == 6912
     assert right.failure_months == [8]
     assert farm.cash_som == 150000
     assert farm.family_reserve_som == 10000
