@@ -63,6 +63,7 @@ DEFAULT_TURN_NORM_M3_HA = 700.0     # справочная поливная но
 DEFAULT_RELIABILITY = 0.85
 K_FROST_DEFAULT = 0.25              # потеря урожая сада за день заморозка в цветение, оценка
 MIN_NEED_FOR_STATUS_MM = 5.0        # меньшая потребность не красит декаду
+MIN_SEVERITY_PCT = 5.0              # недобор меньше 5 % — в пределах погрешности, не тревога
 
 
 def history_years() -> list[int]:
@@ -372,7 +373,7 @@ def _simulate(field: FieldInput, crop: CropInput, sowing: tuple[int, int],
         shortfall = (deficit_pct[i]
                      if buffer_gone and need_net[i] >= MIN_NEED_FOR_STATUS_MM else 0.0)
         severity = max(stress, shortfall)
-        if severity < 1.0:
+        if severity < MIN_SEVERITY_PCT:
             status = "ok"
         elif severity < 20.0:
             status = "deficit_lt20"

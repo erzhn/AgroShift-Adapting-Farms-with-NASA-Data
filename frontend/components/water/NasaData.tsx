@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 
 import { ApiError, type DataSources, getDataSources } from "../../lib/api/water";
 import { formatDate, formatNumber, type Lang, strings, useLang } from "./strings";
+import WaterNav from "./WaterNav";
 import css from "./water.module.css";
 
 // карта тяжёлая и нужна только здесь — грузим отдельно, чтобы не раздувать общий бандл
@@ -35,6 +36,7 @@ export default function NasaData({ lang: langProp }: { lang?: Lang }) {
   return (
     <main className={`${css.vizRoot} ${css.page}`}>
       <div className={css.pageInner}>
+        <WaterNav lang={lang} current="nasa" />
         <header className={css.header}>
           <h1>{t.nasaTitle}</h1>
           <p className={css.lead}>{t.nasaLead}</p>

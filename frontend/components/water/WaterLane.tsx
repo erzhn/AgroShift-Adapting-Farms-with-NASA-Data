@@ -39,7 +39,11 @@ interface Row {
   yearsGe20: number;
 }
 
-const RANK: Record<DecadeStatus, number> = { ok: 0, deficit_lt20: 1, deficit_ge20: 2 };
+// Статус декады для всего хозяйства — по доле потребности, а не по худшему полю:
+// красная, если воды не хватает полям с половиной потребности и больше;
+// жёлтая, если затронута хотя бы треть.
+const RED_SHARE = 0.5;
+const WARN_SHARE = 1 / 3;
 
 function aggregate(balances: WaterBalance[]): Row[] {
   const rows: Row[] = Array.from({ length: 36 }, (_, i) => ({
@@ -47,6 +51,8 @@ function aggregate(balances: WaterBalance[]): Row[] {
     failed: 0, yearsGe20: 0,
   }));
   const deficit = new Array(36).fill(0);
+  const redNeed = new Array(36).fill(0);
+  const warnNeed = new Array(36).fill(0);
   for (const balance of balances) {
     for (const d of balance.season.decades) {
       const row = rows[d.decade - 1];
@@ -55,7 +61,8 @@ function aggregate(balances: WaterBalance[]): Row[] {
       row.received += d.received_m3;
       row.failed = Math.max(row.failed, d.turns_failed);
       deficit[d.decade - 1] += d.deficit_m3;
-      if (RANK[d.status] > RANK[row.status]) row.status = d.status;
+      if (d.status === "deficit_ge20") redNeed[d.decade - 1] += d.need_gross_m3;
+      if (d.status !== "ok") warnNeed[d.decade - 1] += d.need_gross_m3;
     }
     for (const e of balance.ensemble.decades) {
       const row = rows[e.decade - 1];
@@ -64,6 +71,10 @@ function aggregate(balances: WaterBalance[]): Row[] {
   }
   rows.forEach((row, i) => {
     row.deficitPct = row.need > 0 ? (deficit[i] / row.need) * 100 : 0;
+    if (row.need > 0) {
+      if (redNeed[i] / row.need >= RED_SHARE) row.status = "deficit_ge20";
+      else if (warnNeed[i] / row.need >= WARN_SHARE) row.status = "deficit_lt20";
+    }
   });
   return rows;
 }

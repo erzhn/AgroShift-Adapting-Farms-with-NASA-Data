@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 
 import { ApiError, getWaterBalance, type WaterBalance } from "../../lib/api/water";
 import Provenance from "./Provenance";
+import WaterNav from "./WaterNav";
 import SeasonChart from "./SeasonChart";
 import SoilChart from "./SoilChart";
 import { decadeLabel, formatDate, formatNumber, type Lang, strings, useLang } from "./strings";
@@ -69,6 +70,7 @@ export default function FieldWaterCard({ fieldId, strategy, scenario, lang: lang
   return (
     <main className={`${css.vizRoot} ${css.page}`} aria-busy={busy}>
       <div className={css.pageInner}>
+        <WaterNav lang={lang} farmId={field.source === "farms" ? field.farm_id : null} />
         <header className={css.header}>
           <h1>{field.name} · {field.crop_name}</h1>
           <p className={css.lead}>
